@@ -1,0 +1,2415 @@
+{
+  "m1a2": {
+    "file": "m1a2.glb",
+    "kind": "vehicle",
+    "tris": 11330,
+    "size": [
+      8.05,
+      3.98,
+      2.94
+    ],
+    "bounds": {
+      "min": [
+        -4.115,
+        0.0,
+        -1.989
+      ],
+      "max": [
+        6.45,
+        2.94,
+        1.989
+      ]
+    },
+    "nodes": {
+      "hull": {
+        "parent": null,
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "idler_L": {
+        "parent": "hull",
+        "translation": [
+          3.3,
+          0.55,
+          -1.4225
+        ]
+      },
+      "idler_R": {
+        "parent": "hull",
+        "translation": [
+          3.3,
+          0.55,
+          1.4225
+        ]
+      },
+      "sprocket_L": {
+        "parent": "hull",
+        "translation": [
+          -3.38,
+          0.62,
+          -1.4225
+        ]
+      },
+      "sprocket_R": {
+        "parent": "hull",
+        "translation": [
+          -3.38,
+          0.62,
+          1.4225
+        ]
+      },
+      "turret": {
+        "parent": "hull",
+        "translation": [
+          0.35,
+          1.44,
+          0.0
+        ]
+      },
+      "gun": {
+        "parent": "turret",
+        "translation": [
+          1.6,
+          0.47,
+          0.0
+        ]
+      },
+      "muzzle": {
+        "parent": "gun",
+        "translation": [
+          4.5,
+          0.0,
+          0.0
+        ]
+      },
+      "wheel_L0": {
+        "parent": "hull",
+        "translation": [
+          2.25,
+          0.4,
+          -1.4225
+        ]
+      },
+      "wheel_L1": {
+        "parent": "hull",
+        "translation": [
+          1.45,
+          0.4,
+          -1.4225
+        ]
+      },
+      "wheel_L2": {
+        "parent": "hull",
+        "translation": [
+          0.65,
+          0.4,
+          -1.4225
+        ]
+      },
+      "wheel_L3": {
+        "parent": "hull",
+        "translation": [
+          -0.15,
+          0.4,
+          -1.4225
+        ]
+      },
+      "wheel_L4": {
+        "parent": "hull",
+        "translation": [
+          -0.95,
+          0.4,
+          -1.4225
+        ]
+      },
+      "wheel_L5": {
+        "parent": "hull",
+        "translation": [
+          -1.75,
+          0.4,
+          -1.4225
+        ]
+      },
+      "wheel_L6": {
+        "parent": "hull",
+        "translation": [
+          -2.55,
+          0.4,
+          -1.4225
+        ]
+      },
+      "wheel_R0": {
+        "parent": "hull",
+        "translation": [
+          2.25,
+          0.4,
+          1.4225
+        ]
+      },
+      "wheel_R1": {
+        "parent": "hull",
+        "translation": [
+          1.45,
+          0.4,
+          1.4225
+        ]
+      },
+      "wheel_R2": {
+        "parent": "hull",
+        "translation": [
+          0.65,
+          0.4,
+          1.4225
+        ]
+      },
+      "wheel_R3": {
+        "parent": "hull",
+        "translation": [
+          -0.15,
+          0.4,
+          1.4225
+        ]
+      },
+      "wheel_R4": {
+        "parent": "hull",
+        "translation": [
+          -0.95,
+          0.4,
+          1.4225
+        ]
+      },
+      "wheel_R5": {
+        "parent": "hull",
+        "translation": [
+          -1.75,
+          0.4,
+          1.4225
+        ]
+      },
+      "wheel_R6": {
+        "parent": "hull",
+        "translation": [
+          -2.55,
+          0.4,
+          1.4225
+        ]
+      }
+    },
+    "materials": [
+      "Glass",
+      "Vehicle"
+    ],
+    "vertexColors": true,
+    "paintProbe": {
+      "node": "turret",
+      "pos": [
+        -0.2,
+        1.3,
+        -0.28
+      ],
+      "color": [
+        0.39621,
+        0.30509,
+        0.15195
+      ],
+      "expected": [
+        0.39157,
+        0.30054,
+        0.14703
+      ]
+    }
+  },
+  "m2a4": {
+    "file": "m2a4.glb",
+    "kind": "vehicle",
+    "tris": 9398,
+    "size": [
+      6.81,
+      3.28,
+      3.2
+    ],
+    "bounds": {
+      "min": [
+        -3.53,
+        0.0,
+        -1.64
+      ],
+      "max": [
+        3.59,
+        3.2,
+        1.64
+      ]
+    },
+    "nodes": {
+      "hull": {
+        "parent": null,
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "idler_L": {
+        "parent": "hull",
+        "translation": [
+          -2.88,
+          0.52,
+          -1.255
+        ]
+      },
+      "idler_R": {
+        "parent": "hull",
+        "translation": [
+          -2.88,
+          0.52,
+          1.255
+        ]
+      },
+      "sprocket_L": {
+        "parent": "hull",
+        "translation": [
+          2.78,
+          0.62,
+          -1.255
+        ]
+      },
+      "sprocket_R": {
+        "parent": "hull",
+        "translation": [
+          2.78,
+          0.62,
+          1.255
+        ]
+      },
+      "turret": {
+        "parent": "hull",
+        "translation": [
+          0.3,
+          2.0,
+          0.0
+        ]
+      },
+      "gun": {
+        "parent": "turret",
+        "translation": [
+          0.95,
+          0.32,
+          0.0
+        ]
+      },
+      "muzzle": {
+        "parent": "gun",
+        "translation": [
+          2.34,
+          0.0,
+          0.0
+        ]
+      },
+      "wheel_L0": {
+        "parent": "hull",
+        "translation": [
+          2.05,
+          0.38,
+          -1.255
+        ]
+      },
+      "wheel_L1": {
+        "parent": "hull",
+        "translation": [
+          1.21,
+          0.38,
+          -1.255
+        ]
+      },
+      "wheel_L2": {
+        "parent": "hull",
+        "translation": [
+          0.37,
+          0.38,
+          -1.255
+        ]
+      },
+      "wheel_L3": {
+        "parent": "hull",
+        "translation": [
+          -0.47,
+          0.38,
+          -1.255
+        ]
+      },
+      "wheel_L4": {
+        "parent": "hull",
+        "translation": [
+          -1.31,
+          0.38,
+          -1.255
+        ]
+      },
+      "wheel_L5": {
+        "parent": "hull",
+        "translation": [
+          -2.15,
+          0.38,
+          -1.255
+        ]
+      },
+      "wheel_R0": {
+        "parent": "hull",
+        "translation": [
+          2.05,
+          0.38,
+          1.255
+        ]
+      },
+      "wheel_R1": {
+        "parent": "hull",
+        "translation": [
+          1.21,
+          0.38,
+          1.255
+        ]
+      },
+      "wheel_R2": {
+        "parent": "hull",
+        "translation": [
+          0.37,
+          0.38,
+          1.255
+        ]
+      },
+      "wheel_R3": {
+        "parent": "hull",
+        "translation": [
+          -0.47,
+          0.38,
+          1.255
+        ]
+      },
+      "wheel_R4": {
+        "parent": "hull",
+        "translation": [
+          -1.31,
+          0.38,
+          1.255
+        ]
+      },
+      "wheel_R5": {
+        "parent": "hull",
+        "translation": [
+          -2.15,
+          0.38,
+          1.255
+        ]
+      }
+    },
+    "materials": [
+      "Glass",
+      "Vehicle"
+    ],
+    "vertexColors": true,
+    "paintProbe": {
+      "node": "turret",
+      "pos": [
+        -0.7248,
+        1.02,
+        0.7348
+      ],
+      "color": [
+        0.39273,
+        0.30234,
+        0.14993
+      ],
+      "expected": [
+        0.39157,
+        0.30054,
+        0.14703
+      ]
+    }
+  },
+  "stryker": {
+    "file": "stryker.glb",
+    "kind": "vehicle",
+    "tris": 8810,
+    "size": [
+      7.28,
+      2.76,
+      2.8
+    ],
+    "bounds": {
+      "min": [
+        -3.66,
+        0.0,
+        -1.38
+      ],
+      "max": [
+        3.624,
+        2.8,
+        1.38
+      ]
+    },
+    "nodes": {
+      "hull": {
+        "parent": null,
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "turret": {
+        "parent": "hull",
+        "translation": [
+          0.3,
+          2.02,
+          0.0
+        ]
+      },
+      "gun": {
+        "parent": "turret",
+        "translation": [
+          0.0,
+          0.38,
+          0.03
+        ]
+      },
+      "muzzle": {
+        "parent": "gun",
+        "translation": [
+          1.35,
+          0.0,
+          0.0
+        ]
+      },
+      "wheel_L0": {
+        "parent": "hull",
+        "translation": [
+          2.3,
+          0.5313,
+          -1.12
+        ]
+      },
+      "wheel_L1": {
+        "parent": "hull",
+        "translation": [
+          1.0,
+          0.5313,
+          -1.12
+        ]
+      },
+      "wheel_L2": {
+        "parent": "hull",
+        "translation": [
+          -0.95,
+          0.5313,
+          -1.12
+        ]
+      },
+      "wheel_L3": {
+        "parent": "hull",
+        "translation": [
+          -2.25,
+          0.5313,
+          -1.12
+        ]
+      },
+      "wheel_R0": {
+        "parent": "hull",
+        "translation": [
+          2.3,
+          0.5313,
+          1.12
+        ]
+      },
+      "wheel_R1": {
+        "parent": "hull",
+        "translation": [
+          1.0,
+          0.5313,
+          1.12
+        ]
+      },
+      "wheel_R2": {
+        "parent": "hull",
+        "translation": [
+          -0.95,
+          0.5313,
+          1.12
+        ]
+      },
+      "wheel_R3": {
+        "parent": "hull",
+        "translation": [
+          -2.25,
+          0.5313,
+          1.12
+        ]
+      }
+    },
+    "materials": [
+      "Glass",
+      "Vehicle"
+    ],
+    "vertexColors": true,
+    "paintProbe": {
+      "node": "hull",
+      "pos": [
+        -3.36,
+        2.02,
+        1.0289
+      ],
+      "color": [
+        0.39368,
+        0.30256,
+        0.15135
+      ],
+      "expected": [
+        0.39157,
+        0.30054,
+        0.14703
+      ]
+    }
+  },
+  "jltv": {
+    "file": "jltv.glb",
+    "kind": "vehicle",
+    "tris": 5840,
+    "size": [
+      6.53,
+      2.86,
+      2.63
+    ],
+    "bounds": {
+      "min": [
+        -3.17,
+        0.0,
+        -1.43
+      ],
+      "max": [
+        3.36,
+        2.63,
+        1.43
+      ]
+    },
+    "nodes": {
+      "hull": {
+        "parent": null,
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "turret": {
+        "parent": "hull",
+        "translation": [
+          0.05,
+          1.95,
+          0.0
+        ]
+      },
+      "gun": {
+        "parent": "turret",
+        "translation": [
+          0.22,
+          0.46,
+          0.0
+        ]
+      },
+      "muzzle": {
+        "parent": "gun",
+        "translation": [
+          1.3,
+          0.0,
+          0.0
+        ]
+      },
+      "wheel_L0": {
+        "parent": "hull",
+        "translation": [
+          1.85,
+          0.454,
+          -1.03
+        ]
+      },
+      "wheel_L1": {
+        "parent": "hull",
+        "translation": [
+          -1.6,
+          0.454,
+          -1.03
+        ]
+      },
+      "wheel_R0": {
+        "parent": "hull",
+        "translation": [
+          1.85,
+          0.454,
+          1.03
+        ]
+      },
+      "wheel_R1": {
+        "parent": "hull",
+        "translation": [
+          -1.6,
+          0.454,
+          1.03
+        ]
+      }
+    },
+    "materials": [
+      "Glass",
+      "Vehicle"
+    ],
+    "vertexColors": true,
+    "paintProbe": {
+      "node": "hull",
+      "pos": [
+        -0.925,
+        1.95,
+        0.0
+      ],
+      "color": [
+        0.39416,
+        0.30272,
+        0.15027
+      ],
+      "expected": [
+        0.39157,
+        0.30054,
+        0.14703
+      ]
+    }
+  },
+  "t90m": {
+    "file": "t90m.glb",
+    "kind": "vehicle",
+    "tris": 11900,
+    "size": [
+      7.35,
+      3.76,
+      2.58
+    ],
+    "bounds": {
+      "min": [
+        -3.895,
+        0.0,
+        -1.88
+      ],
+      "max": [
+        6.13,
+        2.58,
+        1.88
+      ]
+    },
+    "nodes": {
+      "hull": {
+        "parent": null,
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "idler_L": {
+        "parent": "hull",
+        "translation": [
+          2.95,
+          0.5,
+          -1.45
+        ]
+      },
+      "idler_R": {
+        "parent": "hull",
+        "translation": [
+          2.95,
+          0.5,
+          1.45
+        ]
+      },
+      "sprocket_L": {
+        "parent": "hull",
+        "translation": [
+          -3.02,
+          0.55,
+          -1.45
+        ]
+      },
+      "sprocket_R": {
+        "parent": "hull",
+        "translation": [
+          -3.02,
+          0.55,
+          1.45
+        ]
+      },
+      "turret": {
+        "parent": "hull",
+        "translation": [
+          0.3,
+          1.38,
+          0.0
+        ]
+      },
+      "gun": {
+        "parent": "turret",
+        "translation": [
+          1.0,
+          0.3,
+          0.0
+        ]
+      },
+      "muzzle": {
+        "parent": "gun",
+        "translation": [
+          4.83,
+          0.0,
+          0.0
+        ]
+      },
+      "wheel_L0": {
+        "parent": "hull",
+        "translation": [
+          2.08,
+          0.445,
+          -1.45
+        ]
+      },
+      "wheel_L1": {
+        "parent": "hull",
+        "translation": [
+          1.24,
+          0.445,
+          -1.45
+        ]
+      },
+      "wheel_L2": {
+        "parent": "hull",
+        "translation": [
+          0.4,
+          0.445,
+          -1.45
+        ]
+      },
+      "wheel_L3": {
+        "parent": "hull",
+        "translation": [
+          -0.44,
+          0.445,
+          -1.45
+        ]
+      },
+      "wheel_L4": {
+        "parent": "hull",
+        "translation": [
+          -1.28,
+          0.445,
+          -1.45
+        ]
+      },
+      "wheel_L5": {
+        "parent": "hull",
+        "translation": [
+          -2.12,
+          0.445,
+          -1.45
+        ]
+      },
+      "wheel_R0": {
+        "parent": "hull",
+        "translation": [
+          2.08,
+          0.445,
+          1.45
+        ]
+      },
+      "wheel_R1": {
+        "parent": "hull",
+        "translation": [
+          1.24,
+          0.445,
+          1.45
+        ]
+      },
+      "wheel_R2": {
+        "parent": "hull",
+        "translation": [
+          0.4,
+          0.445,
+          1.45
+        ]
+      },
+      "wheel_R3": {
+        "parent": "hull",
+        "translation": [
+          -0.44,
+          0.445,
+          1.45
+        ]
+      },
+      "wheel_R4": {
+        "parent": "hull",
+        "translation": [
+          -1.28,
+          0.445,
+          1.45
+        ]
+      },
+      "wheel_R5": {
+        "parent": "hull",
+        "translation": [
+          -2.12,
+          0.445,
+          1.45
+        ]
+      }
+    },
+    "materials": [
+      "Glass",
+      "Vehicle"
+    ],
+    "vertexColors": true,
+    "paintProbe": {
+      "node": "turret",
+      "pos": [
+        -0.6006,
+        0.6,
+        -0.0187
+      ],
+      "color": [
+        0.04071,
+        0.03977,
+        0.02731
+      ],
+      "expected": [
+        0.02416,
+        0.02519,
+        0.0185
+      ]
+    }
+  },
+  "t72b3": {
+    "file": "t72b3.glb",
+    "kind": "vehicle",
+    "tris": 10394,
+    "size": [
+      7.35,
+      3.7,
+      2.62
+    ],
+    "bounds": {
+      "min": [
+        -3.895,
+        0.0,
+        -1.85
+      ],
+      "max": [
+        6.08,
+        2.62,
+        1.85
+      ]
+    },
+    "nodes": {
+      "hull": {
+        "parent": null,
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "idler_L": {
+        "parent": "hull",
+        "translation": [
+          2.95,
+          0.5,
+          -1.42
+        ]
+      },
+      "idler_R": {
+        "parent": "hull",
+        "translation": [
+          2.95,
+          0.5,
+          1.42
+        ]
+      },
+      "sprocket_L": {
+        "parent": "hull",
+        "translation": [
+          -3.02,
+          0.55,
+          -1.42
+        ]
+      },
+      "sprocket_R": {
+        "parent": "hull",
+        "translation": [
+          -3.02,
+          0.55,
+          1.42
+        ]
+      },
+      "turret": {
+        "parent": "hull",
+        "translation": [
+          0.3,
+          1.38,
+          0.0
+        ]
+      },
+      "gun": {
+        "parent": "turret",
+        "translation": [
+          0.95,
+          0.36,
+          0.0
+        ]
+      },
+      "muzzle": {
+        "parent": "gun",
+        "translation": [
+          4.83,
+          0.0,
+          0.0
+        ]
+      },
+      "wheel_L0": {
+        "parent": "hull",
+        "translation": [
+          2.08,
+          0.445,
+          -1.42
+        ]
+      },
+      "wheel_L1": {
+        "parent": "hull",
+        "translation": [
+          1.24,
+          0.445,
+          -1.42
+        ]
+      },
+      "wheel_L2": {
+        "parent": "hull",
+        "translation": [
+          0.4,
+          0.445,
+          -1.42
+        ]
+      },
+      "wheel_L3": {
+        "parent": "hull",
+        "translation": [
+          -0.44,
+          0.445,
+          -1.42
+        ]
+      },
+      "wheel_L4": {
+        "parent": "hull",
+        "translation": [
+          -1.28,
+          0.445,
+          -1.42
+        ]
+      },
+      "wheel_L5": {
+        "parent": "hull",
+        "translation": [
+          -2.12,
+          0.445,
+          -1.42
+        ]
+      },
+      "wheel_R0": {
+        "parent": "hull",
+        "translation": [
+          2.08,
+          0.445,
+          1.42
+        ]
+      },
+      "wheel_R1": {
+        "parent": "hull",
+        "translation": [
+          1.24,
+          0.445,
+          1.42
+        ]
+      },
+      "wheel_R2": {
+        "parent": "hull",
+        "translation": [
+          0.4,
+          0.445,
+          1.42
+        ]
+      },
+      "wheel_R3": {
+        "parent": "hull",
+        "translation": [
+          -0.44,
+          0.445,
+          1.42
+        ]
+      },
+      "wheel_R4": {
+        "parent": "hull",
+        "translation": [
+          -1.28,
+          0.445,
+          1.42
+        ]
+      },
+      "wheel_R5": {
+        "parent": "hull",
+        "translation": [
+          -2.12,
+          0.445,
+          1.42
+        ]
+      }
+    },
+    "materials": [
+      "Glass",
+      "Vehicle"
+    ],
+    "vertexColors": true,
+    "paintProbe": {
+      "node": "hull",
+      "pos": [
+        -2.0207,
+        1.55,
+        1.188
+      ],
+      "color": [
+        0.08696,
+        0.1088,
+        0.04649
+      ],
+      "expected": [
+        0.07819,
+        0.10224,
+        0.04231
+      ]
+    }
+  },
+  "bmp3": {
+    "file": "bmp3.glb",
+    "kind": "vehicle",
+    "tris": 9802,
+    "size": [
+      7.23,
+      3.28,
+      2.65
+    ],
+    "bounds": {
+      "min": [
+        -3.662,
+        -0.0,
+        -1.641
+      ],
+      "max": [
+        4.05,
+        2.65,
+        1.641
+      ]
+    },
+    "nodes": {
+      "hull": {
+        "parent": null,
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "idler_L": {
+        "parent": "hull",
+        "translation": [
+          3.0,
+          0.55,
+          -1.36
+        ]
+      },
+      "idler_R": {
+        "parent": "hull",
+        "translation": [
+          3.0,
+          0.55,
+          1.36
+        ]
+      },
+      "sprocket_L": {
+        "parent": "hull",
+        "translation": [
+          -3.0,
+          0.6,
+          -1.36
+        ]
+      },
+      "sprocket_R": {
+        "parent": "hull",
+        "translation": [
+          -3.0,
+          0.6,
+          1.36
+        ]
+      },
+      "turret": {
+        "parent": "hull",
+        "translation": [
+          0.15,
+          1.55,
+          0.0
+        ]
+      },
+      "gun": {
+        "parent": "turret",
+        "translation": [
+          0.85,
+          0.3,
+          0.0
+        ]
+      },
+      "muzzle": {
+        "parent": "gun",
+        "translation": [
+          3.05,
+          0.0,
+          0.0
+        ]
+      },
+      "muzzle_30mm": {
+        "parent": "gun",
+        "translation": [
+          2.88,
+          -0.02,
+          0.32
+        ]
+      },
+      "wheel_L0": {
+        "parent": "hull",
+        "translation": [
+          2.2,
+          0.39,
+          -1.36
+        ]
+      },
+      "wheel_L1": {
+        "parent": "hull",
+        "translation": [
+          1.34,
+          0.39,
+          -1.36
+        ]
+      },
+      "wheel_L2": {
+        "parent": "hull",
+        "translation": [
+          0.48,
+          0.39,
+          -1.36
+        ]
+      },
+      "wheel_L3": {
+        "parent": "hull",
+        "translation": [
+          -0.38,
+          0.39,
+          -1.36
+        ]
+      },
+      "wheel_L4": {
+        "parent": "hull",
+        "translation": [
+          -1.24,
+          0.39,
+          -1.36
+        ]
+      },
+      "wheel_L5": {
+        "parent": "hull",
+        "translation": [
+          -2.1,
+          0.39,
+          -1.36
+        ]
+      },
+      "wheel_R0": {
+        "parent": "hull",
+        "translation": [
+          2.2,
+          0.39,
+          1.36
+        ]
+      },
+      "wheel_R1": {
+        "parent": "hull",
+        "translation": [
+          1.34,
+          0.39,
+          1.36
+        ]
+      },
+      "wheel_R2": {
+        "parent": "hull",
+        "translation": [
+          0.48,
+          0.39,
+          1.36
+        ]
+      },
+      "wheel_R3": {
+        "parent": "hull",
+        "translation": [
+          -0.38,
+          0.39,
+          1.36
+        ]
+      },
+      "wheel_R4": {
+        "parent": "hull",
+        "translation": [
+          -1.24,
+          0.39,
+          1.36
+        ]
+      },
+      "wheel_R5": {
+        "parent": "hull",
+        "translation": [
+          -2.1,
+          0.39,
+          1.36
+        ]
+      }
+    },
+    "materials": [
+      "Glass",
+      "Vehicle"
+    ],
+    "vertexColors": true,
+    "paintProbe": {
+      "node": "hull",
+      "pos": [
+        2.6145,
+        1.201,
+        0.935
+      ],
+      "color": [
+        0.08702,
+        0.10965,
+        0.05402
+      ],
+      "expected": [
+        0.09084,
+        0.11697,
+        0.05613
+      ]
+    }
+  },
+  "btr82a": {
+    "file": "btr82a.glb",
+    "kind": "vehicle",
+    "tris": 7570,
+    "size": [
+      7.94,
+      2.9,
+      3.05
+    ],
+    "bounds": {
+      "min": [
+        -3.975,
+        0.0,
+        -1.45
+      ],
+      "max": [
+        4.06,
+        3.05,
+        1.45
+      ]
+    },
+    "nodes": {
+      "hull": {
+        "parent": null,
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "turret": {
+        "parent": "hull",
+        "translation": [
+          0.9,
+          2.05,
+          0.0
+        ]
+      },
+      "gun": {
+        "parent": "turret",
+        "translation": [
+          0.58,
+          0.24,
+          0.0
+        ]
+      },
+      "muzzle": {
+        "parent": "gun",
+        "translation": [
+          2.58,
+          0.0,
+          0.0
+        ]
+      },
+      "wheel_L0": {
+        "parent": "hull",
+        "translation": [
+          2.2,
+          0.5216,
+          -1.16
+        ]
+      },
+      "wheel_L1": {
+        "parent": "hull",
+        "translation": [
+          0.85,
+          0.5216,
+          -1.16
+        ]
+      },
+      "wheel_L2": {
+        "parent": "hull",
+        "translation": [
+          -0.7,
+          0.5216,
+          -1.16
+        ]
+      },
+      "wheel_L3": {
+        "parent": "hull",
+        "translation": [
+          -2.05,
+          0.5216,
+          -1.16
+        ]
+      },
+      "wheel_R0": {
+        "parent": "hull",
+        "translation": [
+          2.2,
+          0.5216,
+          1.16
+        ]
+      },
+      "wheel_R1": {
+        "parent": "hull",
+        "translation": [
+          0.85,
+          0.5216,
+          1.16
+        ]
+      },
+      "wheel_R2": {
+        "parent": "hull",
+        "translation": [
+          -0.7,
+          0.5216,
+          1.16
+        ]
+      },
+      "wheel_R3": {
+        "parent": "hull",
+        "translation": [
+          -2.05,
+          0.5216,
+          1.16
+        ]
+      }
+    },
+    "materials": [
+      "Glass",
+      "Vehicle"
+    ],
+    "vertexColors": true,
+    "paintProbe": {
+      "node": "hull",
+      "pos": [
+        2.25,
+        2.05,
+        -1.0198
+      ],
+      "color": [
+        0.0883,
+        0.10971,
+        0.04527
+      ],
+      "expected": [
+        0.07819,
+        0.10224,
+        0.04231
+      ]
+    }
+  },
+  "tigr": {
+    "file": "tigr.glb",
+    "kind": "vehicle",
+    "tris": 5832,
+    "size": [
+      5.99,
+      2.86,
+      2.55
+    ],
+    "bounds": {
+      "min": [
+        -2.95,
+        0.0,
+        -1.43
+      ],
+      "max": [
+        3.04,
+        2.55,
+        1.43
+      ]
+    },
+    "nodes": {
+      "hull": {
+        "parent": null,
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "turret": {
+        "parent": "hull",
+        "translation": [
+          -0.35,
+          1.95,
+          0.0
+        ]
+      },
+      "gun": {
+        "parent": "turret",
+        "translation": [
+          0.12,
+          0.36,
+          0.0
+        ]
+      },
+      "muzzle": {
+        "parent": "gun",
+        "translation": [
+          1.0,
+          0.0,
+          0.0
+        ]
+      },
+      "wheel_L0": {
+        "parent": "hull",
+        "translation": [
+          1.65,
+          0.4733,
+          -1.02
+        ]
+      },
+      "wheel_L1": {
+        "parent": "hull",
+        "translation": [
+          -1.6,
+          0.4733,
+          -1.02
+        ]
+      },
+      "wheel_R0": {
+        "parent": "hull",
+        "translation": [
+          1.65,
+          0.4733,
+          1.02
+        ]
+      },
+      "wheel_R1": {
+        "parent": "hull",
+        "translation": [
+          -1.6,
+          0.4733,
+          1.02
+        ]
+      }
+    },
+    "materials": [
+      "Glass",
+      "Vehicle"
+    ],
+    "vertexColors": true,
+    "paintProbe": {
+      "node": "hull",
+      "pos": [
+        2.0753,
+        1.4106,
+        0.04
+      ],
+      "color": [
+        0.09413,
+        0.11256,
+        0.04794
+      ],
+      "expected": [
+        0.07819,
+        0.10224,
+        0.04231
+      ]
+    }
+  },
+  "soldier_stand": {
+    "file": "soldier_stand.glb",
+    "kind": "soldier",
+    "tris": 502,
+    "size": [
+      1.13,
+      0.64,
+      1.76
+    ],
+    "bounds": {
+      "min": [
+        -0.259,
+        0.0,
+        -0.258
+      ],
+      "max": [
+        0.867,
+        1.758,
+        0.384
+      ]
+    },
+    "nodes": {
+      "soldier": {
+        "parent": null,
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "muzzle": {
+        "parent": "soldier",
+        "translation": [
+          0.8629,
+          0.927,
+          0.0261
+        ]
+      }
+    }
+  },
+  "soldier_kneel": {
+    "file": "soldier_kneel.glb",
+    "kind": "soldier",
+    "tris": 502,
+    "size": [
+      1.37,
+      0.67,
+      1.2
+    ],
+    "bounds": {
+      "min": [
+        -0.48,
+        0.0,
+        -0.235
+      ],
+      "max": [
+        0.89,
+        1.205,
+        0.43
+      ]
+    },
+    "nodes": {
+      "soldier": {
+        "parent": null,
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "muzzle": {
+        "parent": "soldier",
+        "translation": [
+          0.8893,
+          0.8925,
+          0.0959
+        ]
+      }
+    }
+  },
+  "soldier_prone": {
+    "file": "soldier_prone.glb",
+    "kind": "soldier",
+    "tris": 502,
+    "size": [
+      2.34,
+      0.79,
+      0.47
+    ],
+    "bounds": {
+      "min": [
+        -0.898,
+        0.0,
+        -0.368
+      ],
+      "max": [
+        1.446,
+        0.467,
+        0.425
+      ]
+    },
+    "nodes": {
+      "soldier": {
+        "parent": null,
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "muzzle": {
+        "parent": "soldier",
+        "translation": [
+          1.446,
+          0.2983,
+          0.1192
+        ]
+      }
+    }
+  },
+  "soldier_dead": {
+    "file": "soldier_dead.glb",
+    "kind": "soldier",
+    "tris": 490,
+    "size": [
+      1.74,
+      1.58,
+      0.34
+    ],
+    "bounds": {
+      "min": [
+        -0.869,
+        0.0,
+        -0.887
+      ],
+      "max": [
+        0.869,
+        0.338,
+        0.694
+      ]
+    },
+    "nodes": {
+      "soldier": {
+        "parent": null,
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "tree_oak": {
+    "file": "tree_oak.glb",
+    "kind": "tree",
+    "tris": 444,
+    "size": [
+      7.15,
+      6.38,
+      9.1
+    ],
+    "bounds": {
+      "min": [
+        -3.56,
+        0.0,
+        -3.156
+      ],
+      "max": [
+        3.595,
+        9.1,
+        3.221
+      ]
+    },
+    "nodes": {
+      "tree_oak": {
+        "parent": null,
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "materials": [
+      "Foliage",
+      "Trunk"
+    ],
+    "vertexColors": true,
+    "paintProbe": {
+      "node": "tree_oak",
+      "pos": [
+        1.1107,
+        8.4161,
+        -1.2355
+      ],
+      "color": [
+        0.06351,
+        0.10872,
+        0.01889
+      ],
+      "expected": [
+        0.04817,
+        0.09084,
+        0.016
+      ]
+    }
+  },
+  "tree_pine": {
+    "file": "tree_pine.glb",
+    "kind": "tree",
+    "tris": 318,
+    "size": [
+      4.35,
+      4.34,
+      12.0
+    ],
+    "bounds": {
+      "min": [
+        -2.239,
+        0.0,
+        -2.214
+      ],
+      "max": [
+        2.112,
+        12.0,
+        2.125
+      ]
+    },
+    "nodes": {
+      "tree_pine": {
+        "parent": null,
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "materials": [
+      "Foliage",
+      "Trunk"
+    ],
+    "vertexColors": true,
+    "paintProbe": {
+      "node": "tree_pine",
+      "pos": [
+        -0.2445,
+        9.25,
+        -0.1507
+      ],
+      "color": [
+        0.02194,
+        0.04725,
+        0.01601
+      ],
+      "expected": [
+        0.02416,
+        0.06125,
+        0.02217
+      ]
+    }
+  },
+  "tree_birch": {
+    "file": "tree_birch.glb",
+    "kind": "tree",
+    "tris": 348,
+    "size": [
+      3.38,
+      3.03,
+      10.06
+    ],
+    "bounds": {
+      "min": [
+        -1.622,
+        0.0,
+        -1.519
+      ],
+      "max": [
+        1.758,
+        10.065,
+        1.507
+      ]
+    },
+    "nodes": {
+      "tree_birch": {
+        "parent": null,
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "materials": [
+      "Foliage",
+      "Trunk"
+    ],
+    "vertexColors": true,
+    "paintProbe": {
+      "node": "tree_birch",
+      "pos": [
+        1.263,
+        7.6016,
+        1.0986
+      ],
+      "color": [
+        0.11603,
+        0.19384,
+        0.0268
+      ],
+      "expected": [
+        0.09306,
+        0.16827,
+        0.02416
+      ]
+    }
+  },
+  "bush": {
+    "file": "bush.glb",
+    "kind": "tree",
+    "tris": 168,
+    "size": [
+      2.51,
+      1.94,
+      1.26
+    ],
+    "bounds": {
+      "min": [
+        -1.281,
+        0.0,
+        -0.927
+      ],
+      "max": [
+        1.23,
+        1.263,
+        1.013
+      ]
+    },
+    "nodes": {
+      "bush": {
+        "parent": null,
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "materials": [
+      "Foliage"
+    ],
+    "vertexColors": true,
+    "paintProbe": {
+      "node": "bush",
+      "pos": [
+        0.2873,
+        0.7329,
+        -0.6161
+      ],
+      "color": [
+        0.0713,
+        0.10971,
+        0.01949
+      ],
+      "expected": [
+        0.05286,
+        0.09306,
+        0.016
+      ]
+    }
+  },
+  "tree_oak_lod": {
+    "file": "tree_oak_lod.glb",
+    "kind": "tree",
+    "tris": 88,
+    "size": [
+      6.75,
+      5.92,
+      8.78
+    ],
+    "bounds": {
+      "min": [
+        -3.406,
+        0.0,
+        -2.932
+      ],
+      "max": [
+        3.347,
+        8.784,
+        2.986
+      ]
+    },
+    "nodes": {
+      "tree_oak_lod": {
+        "parent": null,
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "materials": [
+      "Foliage",
+      "Trunk"
+    ],
+    "vertexColors": true,
+    "paintProbe": {
+      "node": "tree_oak_lod",
+      "pos": [
+        -0.8074,
+        8.1848,
+        -1.4678
+      ],
+      "color": [
+        0.08999,
+        0.14752,
+        0.02556
+      ],
+      "expected": [
+        0.04817,
+        0.09084,
+        0.016
+      ]
+    },
+    "lodOf": "tree_oak"
+  },
+  "tree_pine_lod": {
+    "file": "tree_pine_lod.glb",
+    "kind": "tree",
+    "tris": 54,
+    "size": [
+      4.77,
+      4.77,
+      12.0
+    ],
+    "bounds": {
+      "min": [
+        -2.384,
+        0.0,
+        -2.384
+      ],
+      "max": [
+        2.384,
+        12.0,
+        2.384
+      ]
+    },
+    "nodes": {
+      "tree_pine_lod": {
+        "parent": null,
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "materials": [
+      "Foliage",
+      "Trunk"
+    ],
+    "vertexColors": true,
+    "paintProbe": {
+      "node": "tree_pine_lod",
+      "pos": [
+        0.8849,
+        8.0,
+        0.8106
+      ],
+      "color": [
+        0.01527,
+        0.03496,
+        0.01273
+      ],
+      "expected": [
+        0.02416,
+        0.06125,
+        0.02217
+      ]
+    },
+    "lodOf": "tree_pine"
+  },
+  "tree_birch_lod": {
+    "file": "tree_birch_lod.glb",
+    "kind": "tree",
+    "tris": 76,
+    "size": [
+      3.47,
+      3.46,
+      9.43
+    ],
+    "bounds": {
+      "min": [
+        -1.713,
+        0.0,
+        -1.657
+      ],
+      "max": [
+        1.756,
+        9.428,
+        1.805
+      ]
+    },
+    "nodes": {
+      "tree_birch_lod": {
+        "parent": null,
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "materials": [
+      "Foliage",
+      "Trunk"
+    ],
+    "vertexColors": true,
+    "paintProbe": {
+      "node": "tree_birch_lod",
+      "pos": [
+        1.1255,
+        9.0107,
+        0.4137
+      ],
+      "color": [
+        0.18189,
+        0.27486,
+        0.04421
+      ],
+      "expected": [
+        0.09306,
+        0.16827,
+        0.02416
+      ]
+    },
+    "lodOf": "tree_birch"
+  },
+  "bush_lod": {
+    "file": "bush_lod.glb",
+    "kind": "tree",
+    "tris": 78,
+    "size": [
+      2.5,
+      1.98,
+      1.24
+    ],
+    "bounds": {
+      "min": [
+        -1.16,
+        0.0,
+        -1.006
+      ],
+      "max": [
+        1.343,
+        1.236,
+        0.973
+      ]
+    },
+    "nodes": {
+      "bush_lod": {
+        "parent": null,
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "materials": [
+      "Foliage"
+    ],
+    "vertexColors": true,
+    "paintProbe": {
+      "node": "bush_lod",
+      "pos": [
+        -0.4296,
+        1.055,
+        -0.2965
+      ],
+      "color": [
+        0.10994,
+        0.16455,
+        0.02926
+      ],
+      "expected": [
+        0.05286,
+        0.09306,
+        0.016
+      ]
+    },
+    "lodOf": "bush"
+  },
+  "drone_quad": {
+    "file": "drone_quad.glb",
+    "kind": "prop",
+    "tris": 848,
+    "size": [
+      0.57,
+      0.51,
+      0.2
+    ],
+    "bounds": {
+      "min": [
+        -0.281,
+        0.001,
+        -0.285
+      ],
+      "max": [
+        0.285,
+        0.202,
+        0.226
+      ]
+    },
+    "nodes": {
+      "drone_quad": {
+        "parent": null,
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "materials": [
+      "Glass",
+      "Vehicle"
+    ],
+    "vertexColors": true,
+    "paintProbe": {
+      "node": "drone_quad",
+      "pos": [
+        -0.09,
+        0.135,
+        0.045
+      ],
+      "color": [
+        0.09325,
+        0.10407,
+        0.1095
+      ],
+      "expected": [
+        0.10946,
+        0.12214,
+        0.12744
+      ]
+    }
+  },
+  "drone_fixed": {
+    "file": "drone_fixed.glb",
+    "kind": "prop",
+    "tris": 684,
+    "size": [
+      1.25,
+      1.8,
+      0.33
+    ],
+    "bounds": {
+      "min": [
+        -0.63,
+        0.0,
+        -0.9
+      ],
+      "max": [
+        0.62,
+        0.325,
+        0.9
+      ]
+    },
+    "nodes": {
+      "drone_fixed": {
+        "parent": null,
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "materials": [
+      "Glass",
+      "Vehicle"
+    ],
+    "vertexColors": true,
+    "paintProbe": {
+      "node": "drone_fixed",
+      "pos": [
+        0.0001,
+        0.2171,
+        0.023
+      ],
+      "color": [
+        0.10946,
+        0.12262,
+        0.12994
+      ],
+      "expected": [
+        0.10946,
+        0.12214,
+        0.12744
+      ]
+    }
+  },
+  "mortar": {
+    "file": "mortar.glb",
+    "kind": "prop",
+    "tris": 1480,
+    "size": [
+      1.05,
+      0.67,
+      1.17
+    ],
+    "bounds": {
+      "min": [
+        -0.47,
+        0.0,
+        -0.335
+      ],
+      "max": [
+        0.575,
+        1.166,
+        0.335
+      ]
+    },
+    "nodes": {
+      "mortar": {
+        "parent": null,
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "muzzle": {
+        "parent": "mortar",
+        "translation": [
+          0.5342,
+          1.1385,
+          0.0
+        ]
+      }
+    },
+    "materials": [
+      "Glass",
+      "Vehicle"
+    ],
+    "vertexColors": true,
+    "paintProbe": {
+      "node": "mortar",
+      "pos": [
+        -0.1624,
+        0.2049,
+        -0.0351
+      ],
+      "color": [
+        0.0824,
+        0.08616,
+        0.04093
+      ],
+      "expected": [
+        0.08866,
+        0.10224,
+        0.04519
+      ]
+    }
+  },
+  "atgm_tripod": {
+    "file": "atgm_tripod.glb",
+    "kind": "prop",
+    "tris": 1470,
+    "size": [
+      1.22,
+      0.87,
+      1.04
+    ],
+    "bounds": {
+      "min": [
+        -0.58,
+        0.0,
+        -0.435
+      ],
+      "max": [
+        0.645,
+        1.04,
+        0.435
+      ]
+    },
+    "nodes": {
+      "atgm": {
+        "parent": null,
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "turret": {
+        "parent": "atgm",
+        "translation": [
+          0.0,
+          0.71,
+          0.0
+        ]
+      },
+      "gun": {
+        "parent": "turret",
+        "translation": [
+          0.0,
+          0.21,
+          0.0
+        ]
+      },
+      "muzzle": {
+        "parent": "gun",
+        "translation": [
+          0.64,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "materials": [
+      "Glass",
+      "Vehicle"
+    ],
+    "vertexColors": true,
+    "paintProbe": {
+      "node": "gun",
+      "pos": [
+        -0.1567,
+        0.12,
+        -0.2102
+      ],
+      "color": [
+        0.08685,
+        0.09968,
+        0.04659
+      ],
+      "expected": [
+        0.08866,
+        0.10224,
+        0.04519
+      ]
+    }
+  }
+}

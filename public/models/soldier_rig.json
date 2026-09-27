@@ -1,0 +1,151 @@
+{
+ "clips": {
+  "idle_stand": {
+   "duration": 8.0,
+   "loop": true
+  },
+  "idle_kneel": {
+   "duration": 8.0,
+   "loop": true
+  },
+  "idle_prone": {
+   "duration": 8.0,
+   "loop": true
+  },
+  "aim_stand": {
+   "duration": 2.0,
+   "loop": true
+  },
+  "aim_kneel": {
+   "duration": 2.0,
+   "loop": true
+  },
+  "aim_prone": {
+   "duration": 2.0,
+   "loop": true
+  },
+  "walk": {
+   "duration": 1.0,
+   "loop": true
+  },
+  "run": {
+   "duration": 0.66,
+   "loop": true
+  },
+  "sneak": {
+   "duration": 1.2,
+   "loop": true
+  },
+  "reload_stand": {
+   "duration": 2.0,
+   "loop": false
+  },
+  "reload_kneel": {
+   "duration": 2.0,
+   "loop": false
+  },
+  "reload_prone": {
+   "duration": 2.0,
+   "loop": false
+  },
+  "throw": {
+   "duration": 1.1,
+   "loop": false
+  },
+  "death_back": {
+   "duration": 1.0,
+   "loop": false
+  },
+  "death_fwd": {
+   "duration": 0.9,
+   "loop": false
+  },
+  "death_crumple": {
+   "duration": 1.1,
+   "loop": false
+  },
+  "death_prone": {
+   "duration": 0.5,
+   "loop": false
+  },
+  "wounded": {
+   "duration": 3.0,
+   "loop": true
+  },
+  "cower": {
+   "duration": 2.0,
+   "loop": true
+  },
+  "surrender": {
+   "duration": 3.0,
+   "loop": true
+  }
+ },
+ "sides": {
+  "nato": {
+   "file": "soldier_rig_nato.glb",
+   "bodyTris": 3562,
+   "weapons": [
+    "javelin",
+    "launcher",
+    "mg",
+    "rifle",
+    "sniper"
+   ],
+   "kb": 667,
+   "static": {
+    "stand": {
+     "file": "soldier_stand_nato.glb",
+     "tris": 1546
+    },
+    "kneel": {
+     "file": "soldier_kneel_nato.glb",
+     "tris": 1546
+    },
+    "prone": {
+     "file": "soldier_prone_nato.glb",
+     "tris": 1546
+    },
+    "dead": {
+     "file": "soldier_dead_nato.glb",
+     "tris": 1546
+    }
+   }
+  },
+  "opfor": {
+   "file": "soldier_rig_opfor.glb",
+   "bodyTris": 3562,
+   "weapons": [
+    "launcher",
+    "mg",
+    "rifle",
+    "rpg",
+    "sniper"
+   ],
+   "kb": 671,
+   "static": {
+    "stand": {
+     "file": "soldier_stand_opfor.glb",
+     "tris": 1542
+    },
+    "kneel": {
+     "file": "soldier_kneel_opfor.glb",
+     "tris": 1542
+    },
+    "prone": {
+     "file": "soldier_prone_opfor.glb",
+     "tris": 1542
+    },
+    "dead": {
+     "file": "soldier_dead_opfor.glb",
+     "tris": 1542
+    }
+   }
+  }
+ },
+ "clipSpeed": {
+  "walk": 1.6,
+  "run": 3.6363636363636362,
+  "sneak": 0.7
+ }
+}

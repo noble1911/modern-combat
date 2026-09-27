@@ -1,0 +1,33 @@
+{
+  "name": "modern-combat",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --exclude 'tests/tools/**'",
+    "models": "/Applications/Blender.app/Contents/MacOS/Blender --background --factory-startup --python tools/blender/build_models.py && /Applications/Blender.app/Contents/MacOS/Blender --background --factory-startup --python tools/blender/build_soldiers.py",
+    "sim:batch": "vitest run tests/tools/batch.test.ts --silent=false",
+    "sim:trace": "vitest run tests/tools/trace.test.ts --silent=false",
+    "sim:prof": "vitest run tests/tools/prof.test.ts --silent=false",
+    "sim:campaign": "vitest run tests/campaign.test.ts --silent=false",
+    "models:soldiers": "/Applications/Blender.app/Contents/MacOS/Blender --background --factory-startup --python tools/blender/build_soldiers.py",
+    "icons": "node tools/icons/build_weapon_icons.ts",
+    "portraits": "/Applications/Blender.app/Contents/MacOS/Blender --background --factory-startup --python tools/blender/build_portraits.py",
+    "deploy": "scripts/deploy.sh",
+    "preview:path": "npm run build && node tools/serve-prefixed.mjs dist modern-combat 5190"
+  },
+  "dependencies": {
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "@types/three": "^0.186.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.1",
+    "vitest": "^5.0.2"
+  }
+}

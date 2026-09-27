@@ -1,0 +1,6 @@
+node_modules
+dist
+*.blend1
+.DS_Store
+tools/blender/previews/*.png
+!tools/blender/previews/_contact_sheet.png
