@@ -44,8 +44,9 @@ LAN it's http://192.168.1.117:3004/ (the container) or http://192.168.1.117:3010
   [noble1911/home-server](https://github.com/noble1911/home-server) (repo copy of `games/`).
 - **Code.** [noble1911/modern-combat](https://github.com/noble1911/modern-combat) (public).
   `gh` stays on ron875: use `GH_TOKEN="$(gh auth token --user noble1911)"` per command, and push
-  over HTTPS (the SSH key is ron875's), e.g.
-  `git -c credential.helper='!f() { echo username=x-access-token; echo "password=$(gh auth token --user noble1911)"; }; f' push`.
+  over HTTPS (the SSH key is ron875's). The empty `credential.helper=` stops the keychain
+  offering ron875's login first:
+  `git -c credential.helper= -c credential.helper='!f() { echo username=x-access-token; echo "password=$(gh auth token --user noble1911)"; }; f' push`.
 
 **Deploy** a committed version (uncommitted changes are never deployed):
 
