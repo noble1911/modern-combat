@@ -4,6 +4,7 @@ import { findPath, nearestPassable } from './pathfinding';
 import { CELL } from './terrain';
 import type { Soldier, VehicleState } from './types';
 import { DT, World } from './world';
+import { datan2, dcos, dhypot, dsin } from './dmath';
 
 const SPEED = { walk: 1.6, run: 3.7, sneak: 0.7 } as const;
 
@@ -44,7 +45,7 @@ function moveSoldier(w: World, s: Soldier): void {
   const wp = s.path[s.pathIdx];
   const dx = wp.x - s.x;
   const dy = wp.y - s.y;
-  const d = Math.hypot(dx, dy);
+  const d = dhypot(dx, dy);
   const mode = s.state === 'panicked' || s.state === 'routing' ? 'run' : s.state === 'berserk' ? 'run' : s.moveMode;
   let sp = SPEED[mode];
   const [cx, cy] = w.map.cellOf(s.x, s.y);
@@ -62,7 +63,7 @@ function moveSoldier(w: World, s: Soldier): void {
   s.moving = true;
   s.stance = mode === 'sneak' ? 'crouch' : 'stand';
   const fireRecent = w.time - s.firedT < 1.5;
-  if (!fireRecent || !s.target) s.facing = Math.atan2(dy, dx);
+  if (!fireRecent || !s.target) s.facing = datan2(dy, dx);
   const last = s.pathIdx === s.path.length - 1;
   // Crowds: intermediate waypoints only need to be passed near; give up on one we can't reach.
   const prevD = (s as { lastD?: number }).lastD ?? Infinity;
@@ -120,7 +121,7 @@ function separateSoldiers(w: World): void {
           if (o === s || o.id < s.id) continue;
           const dx = o.x - s.x;
           const dy = o.y - s.y;
-          const d = Math.hypot(dx, dy);
+          const d = dhypot(dx, dy);
           if (d >= minD || d < 1e-4) continue;
           const push = (minD - d) * 0.5;
           const nx = dx / d;
@@ -143,8 +144,8 @@ function separateSoldiers(w: World): void {
       // transform into vehicle local frame
       const dx = s.x - v.x;
       const dy = s.y - v.y;
-      const c = Math.cos(-v.heading);
-      const sn = Math.sin(-v.heading);
+      const c = dcos(-v.heading);
+      const sn = dsin(-v.heading);
       const lx = dx * c - dy * sn;
       const ly = dx * sn + dy * c;
       const hl = v.def.length / 2 + 0.6;
@@ -156,8 +157,8 @@ function separateSoldiers(w: World): void {
         let nly = 0;
         if (py < px) nly = Math.sign(ly || 1) * py;
         else nlx = Math.sign(lx || 1) * px;
-        const c2 = Math.cos(v.heading);
-        const s2 = Math.sin(v.heading);
+        const c2 = dcos(v.heading);
+        const s2 = dsin(v.heading);
         tryNudge(w, s, nlx * c2 - nly * s2, nlx * s2 + nly * c2);
       }
     }
@@ -187,9 +188,9 @@ function moveVehicle(w: World, v: VehicleState): void {
     const wp = v.path[v.pathIdx];
     const dx = wp.x - v.x;
     const dy = wp.y - v.y;
-    const d = Math.hypot(dx, dy);
+    const d = dhypot(dx, dy);
     const last = v.pathIdx === v.path.length - 1;
-    const errToWp = Math.abs(wrapAngle((v.reversing ? Math.atan2(dy, dx) + Math.PI : Math.atan2(dy, dx)) - v.heading));
+    const errToWp = Math.abs(wrapAngle((v.reversing ? datan2(dy, dx) + Math.PI : datan2(dy, dx)) - v.heading));
     const tol = last ? (v.def.mobility === 'wheel' ? 5 : 1.5) : 4;
     // a close target far off the nose would put a wheeled vehicle into an endless orbit: call it reached
     const orbiting = last && v.def.mobility === 'wheel' && d < 14 && errToWp > 1.1;
@@ -200,7 +201,7 @@ function moveVehicle(w: World, v: VehicleState): void {
         v.reversing = false;
       }
     } else {
-      const toWp = Math.atan2(dy, dx);
+      const toWp = datan2(dy, dx);
       desired = v.reversing ? wrapAngle(toWp + Math.PI) : toWp;
       const err = Math.abs(wrapAngle(desired - v.heading));
       const [cx, cy] = w.map.cellOf(v.x, v.y);
@@ -224,8 +225,8 @@ function moveVehicle(w: World, v: VehicleState): void {
   if (v.speed < targetSpeed) v.speed = Math.min(targetSpeed, v.speed + acc);
   else v.speed = Math.max(targetSpeed, v.speed - acc * 2);
   if (Math.abs(v.speed) < 0.01) return;
-  const nx = v.x + Math.cos(v.heading) * v.speed * DT;
-  const ny = v.y + Math.sin(v.heading) * v.speed * DT;
+  const nx = v.x + dcos(v.heading) * v.speed * DT;
+  const ny = v.y + dsin(v.heading) * v.speed * DT;
   const [ncx, ncy] = w.map.cellOf(nx, ny);
   const [ocx, ocy] = w.map.cellOf(v.x, v.y);
   const clear = w.map.vehicleClearance(v.def.mobility);
@@ -266,7 +267,7 @@ function separateVehicles(w: World): void {
       const b = vs[j];
       const dx = b.x - a.x;
       const dy = b.y - a.y;
-      const d = Math.hypot(dx, dy);
+      const d = dhypot(dx, dy);
       const minD = (a.def.width + b.def.width) * 0.5 + 1;
       if (d >= minD || d < 1e-3) continue;
       const push = (minD - d) * 0.5;

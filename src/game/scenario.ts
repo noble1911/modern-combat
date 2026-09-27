@@ -15,6 +15,8 @@ export interface ForceEntry {
   campaignId?: string;
   soldierHealth?: ('ok' | 'wounded' | 'dead')[];
   charges?: number;
+  /** Multiplayer: the player slot that will command this unit. */
+  owner?: number;
 }
 
 export interface BattleSetup {
@@ -31,6 +33,11 @@ export interface BattleSetup {
   alt?: boolean;
   /** Time of day / weather for the renderer (defaults to one derived from the seed). */
   lighting?: LightingId;
+  /**
+   * Sides commanded by people (multiplayer: both in versus, one in co-op). Defaults to the
+   * `player` side. The AI commands every other side.
+   */
+  humans?: Side[];
 }
 
 /** Which side attacks by default on a map (the side whose zone is away from most VLs). */
@@ -56,13 +63,14 @@ export function createBattle(setup: BattleSetup, gen?: GeneratedMap): World {
   const g = gen ?? generateMap(def);
   const alt = setup.alt && def.deployAlt ? def.deployAlt : null;
   const rear = alt ? alt.rear : def.rear;
+  const humans = setup.humans ?? (setup.player ? [setup.player] : []);
   const w = new World(g, {
     seed: setup.seed,
     timeLimit: setup.timeLimit,
     deploy: alt ? alt.zones : def.deploy,
     sides: {
-      nato: { ai: setup.player !== 'nato', posture: setup.posture.nato, rear: REAR[rear.nato] },
-      opfor: { ai: setup.player !== 'opfor', posture: setup.posture.opfor, rear: REAR[rear.opfor] },
+      nato: { ai: !humans.includes('nato'), posture: setup.posture.nato, rear: REAR[rear.nato] },
+      opfor: { ai: !humans.includes('opfor'), posture: setup.posture.opfor, rear: REAR[rear.opfor] },
     },
   });
   if (setup.vlOwners) for (const vl of w.vls) if (vl.id in setup.vlOwners) vl.owner = setup.vlOwners[vl.id];
@@ -84,12 +92,13 @@ export function createBattle(setup: BattleSetup, gen?: GeneratedMap): World {
         soldierHealth: f.soldierHealth,
         charges: f.charges,
         mountIn,
+        slot: f.owner,
       });
       created[i] = u.id;
     }
     // Everyone starts deployed sensibly; the player can re-deploy during the deployment phase.
     aiDeploy(w, side);
-    if (setup.player !== side && setup.posture[side] === 'attack') aiMountUp(w, side);
+    if (!humans.includes(side) && setup.posture[side] === 'attack') aiMountUp(w, side);
   }
   return w;
 }

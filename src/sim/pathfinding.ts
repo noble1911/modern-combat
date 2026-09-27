@@ -1,5 +1,6 @@
 import { CELL, Mobility, T, TerrainMap } from './terrain';
 import type { Vec2 } from './math';
+import { dhypot } from './dmath';
 
 /** Binary min-heap keyed by f-score, storing cell indices. */
 class Heap {
@@ -248,7 +249,7 @@ export function pathLength(from: Vec2, path: Vec2[]): number {
   let l = 0;
   let p = from;
   for (const q of path) {
-    l += Math.hypot(q.x - p.x, q.y - p.y);
+    l += dhypot(q.x - p.x, q.y - p.y);
     p = q;
   }
   return l;

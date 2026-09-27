@@ -1,6 +1,7 @@
 import type { Side } from '../data/units';
 import { clamp, distToSegment, pointInPolygon, Rng, ValueNoise, Vec2 } from './math';
 import { Building, CELL, T, TerrainMap } from './terrain';
+import { dcos, dexp, dhypot, dsin } from './dmath';
 
 export type P = [number, number];
 
@@ -113,7 +114,7 @@ export function blob(x: number, y: number, r: number, seed: number, n = 12, irre
   for (let i = 0; i < n; i++) {
     const a = (i / n) * Math.PI * 2;
     const rr = r * (1 - irregular + rng.next() * irregular * 2);
-    out.push([x + Math.cos(a) * rr, y + Math.sin(a) * rr]);
+    out.push([x + dcos(a) * rr, y + dsin(a) * rr]);
   }
   return out;
 }
@@ -143,7 +144,7 @@ export function generateMap(def: MapDef): GeneratedMap {
       let e = noise.fbm(x / def.relief.scale, y / def.relief.scale, 4) * def.relief.amp;
       for (const hl of def.hills ?? []) {
         const d2 = ((x - hl.x) ** 2 + (y - hl.y) ** 2) / (hl.r * hl.r);
-        e += hl.h * Math.exp(-d2 * 2);
+        e += hl.h * dexp(-d2 * 2);
       }
       map.elev[iy * W + ix] = e;
     }
@@ -238,7 +239,7 @@ export function generateMap(def: MapDef): GeneratedMap {
     for (let i = 0; i < r.pts.length - 1; i++) {
       const a = r.pts[i];
       const b = r.pts[i + 1];
-      const len = Math.hypot(b.x - a.x, b.y - a.y);
+      const len = dhypot(b.x - a.x, b.y - a.y);
       const n = Math.ceil(len / 2);
       let inB = false;
       let startT = 0;
@@ -337,7 +338,7 @@ export function generateMap(def: MapDef): GeneratedMap {
       for (let i = 0; i < r.pts.length - 1; i++) {
         const a = r.pts[i];
         const b = r.pts[i + 1];
-        const len = Math.hypot(b.x - a.x, b.y - a.y);
+        const len = dhypot(b.x - a.x, b.y - a.y);
         const dir = { x: (b.x - a.x) / len, y: (b.y - a.y) / len };
         const nrm = { x: -dir.y, y: dir.x };
         for (let s = 0; s < len; s += rng.range(12, 20)) {

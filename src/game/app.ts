@@ -1,17 +1,19 @@
 import { getMap, MAP_ORDER, MAPS, registerMap } from '../data/maps';
 import { randomMap } from '../data/randomMap';
-import { FACTIONS, otherSide, Side, UNITS, unitTemplate } from '../data/units';
+import { FACTIONS, otherSide, Side } from '../data/units';
 import { SoundEngine } from '../audio/sound';
 import type { LightingId } from '../render/atmosphere';
 import type { GraphicsSettings } from '../render/battleView';
 import { ModelLib } from '../render/models';
-import { portraitBg } from '../render/portraits';
 import { MapPainter } from '../render/terrainView';
-import { unitDetailHtml, unitSummary } from '../ui/unitInfo';
+import { ForceEditor } from '../ui/forceEditor';
 import { generateMap } from '../sim/mapgen';
 import type { BattleResult } from '../sim/types';
 import type { World } from '../sim/world';
+import { savedSeat } from '../net/client';
+import type { BattleOptions } from './battle';
 import { BattleScreen, symbolURL } from './battle';
+import { MultiplayerUI } from './multiplayer';
 import { readStored, STORAGE } from './campaign';
 import { CampaignUI } from './campaignUI';
 import { BattleSetup, defaultForces, ForceEntry, forceCost } from './scenario';
@@ -42,6 +44,7 @@ export class App {
   private screen: HTMLElement | null = null;
   private battle: BattleScreen | null = null;
   campaign: CampaignUI;
+  readonly multiplayer = new MultiplayerUI(this);
 
   constructor(readonly root: HTMLElement) {
     this.campaign = new CampaignUI(this);
@@ -71,6 +74,18 @@ export class App {
     await this.models.load((d, t) => (bar.style.width = `${(d / t) * 100}%`));
     load.remove();
     const params = new URLSearchParams(location.search);
+    // invite links (?join=CODE) and reloads in the middle of an online game
+    const join = params.get('join');
+    if (join) {
+      history.replaceState(null, '', location.pathname);
+      this.multiplayer.open(join.toUpperCase());
+      return;
+    }
+    const seat = savedSeat();
+    if (seat) {
+      this.multiplayer.rejoin(seat);
+      return;
+    }
     if (params.get('quick')) {
       const map = params.get('quick')!;
       const side = (params.get('side') as Side) ?? 'nato';
@@ -109,6 +124,7 @@ export class App {
     btn('Operation Iron Corridor', () => this.campaign.open(), true);
     if (this.campaign.hasSave()) btn('Continue Operation', () => this.campaign.continueSaved());
     btn('Quick Battle', () => this.quickBattle());
+    btn('Multiplayer', () => this.multiplayer.open());
     btn('Field Manual (How to Play)', () => this.help());
     btn('Settings', () => this.settings());
     const foot = el('div', '', `<div style="color:var(--dim);font-size:11px;margin-top:16px">A real-time tactical wargame in the tradition of <i>Close Combat: A Bridge Too Far</i>.<br>All units, places and events are fictional.</div>`);
@@ -196,10 +212,7 @@ export class App {
     let minutes = 25;
     let forces: Record<Side, ForceEntry[]> = defaultForces(mapId).forces;
     let budget = 0;
-    /** Unit type shown in the details panel. */
-    let inspect: string | null = null;
-    /** Which row of the force list is selected (-1: a catalogue card is). */
-    let inspectRow = -1;
+    let editor: ForceEditor | null = null;
     const s = el('div', 'page');
     const render = () => {
       const def = getMap(mapId)!;
@@ -216,7 +229,6 @@ export class App {
           mapId = id;
           forces = defaultForces(id).forces;
           budget = 0;
-          inspectRow = -1;
           render();
         };
         mapChoice.appendChild(b);
@@ -228,7 +240,6 @@ export class App {
         mapId = def.id;
         forces = defaultForces('veldmark').forces;
         budget = 0;
-        inspectRow = -1;
         render();
       };
       mapChoice.appendChild(rb);
@@ -253,8 +264,6 @@ export class App {
       row('Your side', [['nato', FACTIONS.nato.name], ['opfor', FACTIONS.opfor.name]], side, (v) => {
         side = v as Side;
         budget = 0;
-        inspect = null;
-        inspectRow = -1;
       });
       row('Enemy quality', [['green', 'Green'], ['regular', 'Regular'], ['veteran', 'Veteran'], ['elite', 'Elite']], diff, (v) => (diff = v));
       row('Time limit', [['15', '15 min'], ['25', '25 min'], ['40', '40 min']], String(minutes), (v) => (minutes = Number(v)));
@@ -262,82 +271,14 @@ export class App {
       grid.appendChild(left);
       // forces: what you've requisitioned, the catalogue to add from, and a details panel
       if (!budget) budget = Math.round((forceCost(forces[side]) * 1.1) / 10) * 10;
-      const available = Object.values(UNITS).filter((t) => t.side === side && !t.id.endsWith('_crew'));
-      if (!inspect || unitTemplate(inspect).side !== side) {
-        inspect = forces[side][0]?.template ?? available[0]?.id ?? null;
-        inspectRow = forces[side].length ? 0 : -1;
-      }
+      if (!editor) editor = new ForceEditor({ side, budget, force: forces[side], onChange: () => render() });
+      else editor.update({ side, budget, force: forces[side] });
       const mid = el('div');
-      const fs = el('div', 'section panel', `<h3>Your force — ${FACTIONS[side].short}</h3>`);
-      const pct = Math.min(100, (cost / Math.max(1, budget)) * 100);
-      fs.appendChild(el('div', 'req', `<div class="req-bar"><div style="width:${pct}%;background:${cost > budget ? 'var(--bad)' : 'var(--accent)'}"></div></div><span>Requisition <b>${cost}</b> / ${budget} pts</span>`));
-      const list = el('div', 'force-list');
-      forces[side].forEach((f, i) => {
-        const t = unitTemplate(f.template);
-        const carrier = f.mountIn !== undefined ? ` <span style="color:var(--dim);font-weight:400">(in ${unitTemplate(forces[side][f.mountIn].template).short})</span>` : '';
-        const r = el('div', `fu${inspectRow === i ? ' sel' : ''}`, `<div class="pic" style="${portraitBg(t)}"><img class="sym" src="${symbolURL(side, t.symbol)}" alt=""></div><div style="min-width:0"><div class="n">${t.name}${carrier}</div><div class="s">${unitSummary(t)}</div></div><span class="c">${t.cost}</span>`);
-        r.onclick = () => {
-          inspect = t.id;
-          inspectRow = i;
-          render();
-        };
-        const rm = el('button', 'btn small', '✕');
-        rm.title = 'Remove';
-        rm.onclick = (e) => {
-          e.stopPropagation();
-          const arr = forces[side];
-          arr.splice(i, 1);
-          if (inspectRow === i) inspectRow = -1;
-          else if (inspectRow > i) inspectRow--;
-          // fix mount references
-          for (const e of arr) {
-            if (e.mountIn === undefined) continue;
-            if (e.mountIn === i) e.mountIn = undefined;
-            else if (e.mountIn > i) e.mountIn--;
-          }
-          render();
-        };
-        r.appendChild(rm);
-        list.appendChild(r);
-      });
-      if (!forces[side].length) list.appendChild(el('div', '', '<div style="color:var(--dim);padding:6px">No units yet — add some from the list below.</div>'));
-      fs.appendChild(list);
-      fs.appendChild(el('h3', '', 'Add units'));
-      (fs.lastChild as HTMLElement).style.marginTop = '14px';
-      const cat = el('div', 'catalogue');
-      for (const t of available) {
-        const affordable = cost + t.cost <= budget;
-        const card = el('div', `cat-card${inspectRow < 0 && inspect === t.id ? ' sel' : ''}${affordable ? '' : ' off'}`, `<div class="pic" style="${portraitBg(t)}"><img class="sym" src="${symbolURL(side, t.symbol)}" alt=""></div><span class="cost">${t.cost}</span><div class="n">${t.name}</div><div class="s">${unitSummary(t)}</div>`);
-        card.title = t.description;
-        card.onclick = () => {
-          inspect = t.id;
-          inspectRow = -1;
-          render();
-        };
-        const add = el('button', 'btn small add', affordable ? '+ Add' : 'Over budget');
-        add.disabled = !affordable;
-        add.onclick = (e) => {
-          e.stopPropagation();
-          forces[side].push({ template: t.id });
-          inspect = t.id;
-          inspectRow = forces[side].length - 1;
-          render();
-        };
-        card.appendChild(add);
-        cat.appendChild(card);
-      }
-      fs.appendChild(cat);
-      mid.appendChild(fs);
+      mid.appendChild(editor.panel);
       const enemy = el('div', 'section panel', `<h3>Enemy force (intelligence estimate)</h3><div style="color:var(--dim)">${forces[otherSide(side)].length} units, approx. ${forceCost(forces[otherSide(side)])} points.</div>`);
       mid.appendChild(enemy);
       grid.appendChild(mid);
-      // details of the unit last clicked
-      const detail = el('div', 'section panel unit-detail');
-      if (inspect) {
-        const t = unitTemplate(inspect);
-        detail.innerHTML = unitDetailHtml(t, symbolURL(side, t.symbol));
-      }
-      grid.appendChild(detail);
+      grid.appendChild(editor.detail);
       s.appendChild(grid);
       const bar = el('div', '', '');
       bar.style.cssText = 'display:flex;gap:10px;justify-content:flex-end;margin-top:10px';
@@ -363,7 +304,7 @@ export class App {
   }
 
   // ------------------------------------------------------------------ battle
-  startBattle(setup: BattleSetup, title: string, onDone: (w: World, r: BattleResult | null) => void, onQuit?: () => void): void {
+  startBattle(setup: BattleSetup, title: string, onDone: (w: World, r: BattleResult | null) => void, onQuit?: () => void, net?: BattleOptions['net']): void {
     const s = el('div', 'screen');
     this.setScreen(s);
     const loading = el('div', 'loading', `<div>PREPARING BATTLEFIELD</div>`);
@@ -375,6 +316,7 @@ export class App {
         models: this.models,
         gfx: this.gfx,
         sound: this.sound,
+        net,
         onExit: (w, r, quit) => {
           if (quit) (onQuit ?? (() => this.mainMenu()))();
           else onDone(w, r);

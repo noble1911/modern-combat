@@ -7,6 +7,7 @@ import { T } from './terrain';
 import type { ExplosionKind, Health, Projectile, Soldier, TargetRef, Unit, VehicleState, WeaponState } from './types';
 import { DT, World } from './world';
 import { slewTurret } from './movement';
+import { datan2, dcos, dhypot, dsin } from './dmath';
 
 export interface BlastParams {
   blast: number;
@@ -73,7 +74,7 @@ function vehicleThreat(v: VehicleState): number {
 }
 
 function facingOf(v: VehicleState, fromX: number, fromY: number, ref = v.heading): 'front' | 'side' | 'rear' {
-  const incoming = Math.atan2(fromY - v.y, fromX - v.x);
+  const incoming = datan2(fromY - v.y, fromX - v.x);
   const rel = Math.abs(wrapAngle(incoming - ref));
   return rel < 0.8 ? 'front' : rel > 2.35 ? 'rear' : 'side';
 }
@@ -243,7 +244,7 @@ function acquireSoldierTarget(w: World, s: Soldier, u: Unit, pol: Policy): void 
   const mod = shooterMod(s);
   if (pol.forcedPoint) {
     const p = pol.forcedPoint;
-    const d = Math.hypot(p.x - s.x, p.y - s.y);
+    const d = dhypot(p.x - s.x, p.y - s.y);
     s.weapons.forEach((ws, i) => {
       if (ws.ammo <= 0 || d > ws.def.range || d < (ws.def.minRange ?? 0) || !ws.def.antiPersonnel) return;
       if (ws.def.cls === 'rocket' || ws.def.cls === 'grenade' || ws.def.cls === 'atgm') return;
@@ -255,13 +256,13 @@ function acquireSoldierTarget(w: World, s: Soldier, u: Unit, pol: Policy): void 
       if (pol.forcedUnit >= 0 && info.unitId !== pol.forcedUnit) continue;
       const eu = w.units[info.unitId];
       if (eu.eliminated || eu.mountedIn >= 0) continue;
-      const approx = Math.hypot(info.x - s.x, info.y - s.y);
+      const approx = dhypot(info.x - s.x, info.y - s.y);
       const lim = eu.vehicle >= 0 ? pol.maxRangeArmor : pol.maxRange;
       if (approx > lim + 30 || approx > 2600) continue;
       if (eu.vehicle >= 0) {
         const v = w.vehicles[eu.vehicle];
         if (v.destroyed || v.abandoned) continue;
-        const d = Math.hypot(v.x - s.x, v.y - s.y);
+        const d = dhypot(v.x - s.x, v.y - s.y);
         if (d > pol.maxRangeArmor) continue;
         s.weapons.forEach((ws, i) => {
           const def = ws.def;
@@ -298,7 +299,7 @@ function acquireSoldierTarget(w: World, s: Soldier, u: Unit, pol: Policy): void 
         }
         for (const o of [a, b]) {
           if (!o) continue;
-          const d = Math.hypot(o.x - s.x, o.y - s.y);
+          const d = dhypot(o.x - s.x, o.y - s.y);
           if (d > pol.maxRange) continue;
           const inBld = w.map.typeAt(o.x, o.y) === T.Building;
           const stanceF = o.stance === 'stand' ? 1 : o.stance === 'crouch' ? 0.65 : 0.4;
@@ -388,7 +389,7 @@ function resolveHitscan(
   mod: number,
   obstruction: number,
 ): void {
-  const d = Math.hypot(tp.x - from.x, tp.y - from.y);
+  const d = dhypot(tp.x - from.x, tp.y - from.y);
   let hitAny = false;
   if (w.dbg) w.curWeapon = `${def.name}${shooterVehicle >= 0 ? ` (${w.units[w.vehicles[shooterVehicle].unitId].name} @${Math.round(d)}m)` : ''}`;
   if (t.kind === 'soldier') {
@@ -449,14 +450,14 @@ function resolveHitscan(
 export function suppress(w: World, x: number, y: number, amount: number, radius: number, attacker: Side, fromX: number, fromY: number): void {
   for (const o of w.soldiersNear(x, y, radius)) {
     if (o.side === attacker || !World.active(o)) continue;
-    const d = Math.hypot(o.x - x, o.y - y);
+    const d = dhypot(o.x - x, o.y - y);
     const falloff = 1 - (d / radius) * 0.7;
     const cov = w.map.coverAt(o.x, o.y, fromX, fromY).cover;
     let add = amount * falloff * (1 - cov * 0.5) * (1.25 - o.exp * 0.5);
     if (o.state === 'berserk') add *= 0.15;
     o.supp = Math.min(100, o.supp + add);
     w.units[o.unitId].underFireT = w.time;
-    w.units[o.unitId].ai.threatDir = Math.atan2(fromY - o.y, fromX - o.x);
+    w.units[o.unitId].ai.threatDir = datan2(fromY - o.y, fromX - o.x);
   }
 }
 
@@ -495,7 +496,7 @@ export function setHealth(w: World, s: Soldier, h: Health, shooter: number, atta
   // killed / incapacitated
   if (w.dbg && (h === 'dead' || h === 'incap')) {
     const sh = shooter >= 0 ? w.soldiers[shooter] : null;
-    w.dbg(`${Math.round(w.time)}s ${u.name}/${s.role} ${h} <- ${w.curWeapon}${sh ? ` [${w.units[sh.unitId].name} @${Math.round(Math.hypot(sh.x - s.x, sh.y - s.y))}m]` : ''}`);
+    w.dbg(`${Math.round(w.time)}s ${u.name}/${s.role} ${h} <- ${w.curWeapon}${sh ? ` [${w.units[sh.unitId].name} @${Math.round(dhypot(sh.x - s.x, sh.y - s.y))}m]` : ''}`);
   }
   if (was !== 'dead' && was !== 'incap') {
     if (shooter >= 0) {
@@ -544,15 +545,15 @@ export function hitVehicle(
     const p = v.def.aps.p * (def.topAttack ? 0.45 : 1);
     if (w.rng.next() < p) {
       v.apsCharges--;
-      const a = Math.atan2(fromY - v.y, fromX - v.x);
-      w.emit({ type: 'explosion', x: v.x + Math.cos(a) * 9, y: v.y + Math.sin(a) * 9, z: gz + 3, size: 2, kind: 'aps' });
+      const a = datan2(fromY - v.y, fromX - v.x);
+      w.emit({ type: 'explosion', x: v.x + dcos(a) * 9, y: v.y + dsin(a) * 9, z: gz + 3, size: 2, kind: 'aps' });
       w.msg(v.side, `${w.units[v.unitId].name}: Trophy intercept! (${v.apsCharges} left)`, v.unitId, 'info');
       v.shock += 10;
       return 'aps';
     }
   }
   v.lastHitT = w.time;
-  v.lastThreatDir = Math.atan2(fromY - v.y, fromX - v.x);
+  v.lastThreatDir = datan2(fromY - v.y, fromX - v.x);
   const hasTurret = v.def.weapons.some((x) => x.mount === 'turret');
   const turretHit = hasTurret && w.rng.next() < 0.35;
   const facing: 'front' | 'side' | 'rear' | 'top' = def.topAttack ? 'top' : facingOf(v, fromX, fromY, turretHit ? v.turret : v.heading);
@@ -573,7 +574,7 @@ export function hitVehicle(
   if (!def.heat && def.cls !== 'tankgun' && def.cls !== 'autocannon') {
     // bullets
   } else if (!def.heat) {
-    const d = Math.hypot(fromX - v.x, fromY - v.y);
+    const d = dhypot(fromX - v.x, fromY - v.y);
     pen *= 1 - d / 12000;
   }
   const u = w.units[v.unitId];
@@ -640,8 +641,8 @@ export function dismountNow(w: World, u: Unit): void {
     const s = w.soldiers[sid];
     s.vehicle = -1;
     const a = back + (i - u.soldiers.length / 2) * 0.4;
-    s.x = s.px = v.x + Math.cos(a) * (v.def.length / 2 + 2);
-    s.y = s.py = v.y + Math.sin(a) * (v.def.length / 2 + 2);
+    s.x = s.px = v.x + dcos(a) * (v.def.length / 2 + 2);
+    s.y = s.py = v.y + dsin(a) * (v.def.length / 2 + 2);
     s.stance = 'prone';
     s.supp = Math.min(100, s.supp + 50);
   });
@@ -709,7 +710,7 @@ export function explode(w: World, x: number, y: number, p: BlastParams, attacker
   const bid = w.map.buildingAt(x, y);
   for (const s of w.soldiersNear(x, y, p.blast * 2.5)) {
     if (!World.active(s) && s.health !== 'incap') continue;
-    const d = Math.hypot(s.x - x, s.y - y);
+    const d = dhypot(s.x - x, s.y - y);
     let cov = w.map.coverAt(s.x, s.y, x, y).coverHE;
     const sb = w.map.buildingAt(s.x, s.y);
     if (sb >= 0 && sb !== bid) cov = Math.max(cov, 0.7);
@@ -724,7 +725,7 @@ export function explode(w: World, x: number, y: number, p: BlastParams, attacker
   suppress(w, x, y, p.suppression, p.suppRadius, attacker, x, y + 0.01);
   for (const v of w.vehicles) {
     if (v.destroyed) continue;
-    const d = Math.hypot(v.x - x, v.y - y);
+    const d = dhypot(v.x - x, v.y - y);
     if (d > p.blast + 3) continue;
     v.shock = Math.min(100, v.shock + p.suppression * 0.4);
     if (p.pen > 0 && d < 3.5) {
@@ -784,7 +785,7 @@ export function launch(
   rounds: number,
 ): void {
   const tp0 = targetPoint(w, t);
-  const d = Math.hypot(tp0.x - from.x, tp0.y - from.y);
+  const d = dhypot(tp0.x - from.x, tp0.y - from.y);
   const kind: Projectile['kind'] = def.indirect ? 'indirect' : def.cls === 'grenade' ? 'thrown' : 'direct';
   for (let i = 0; i < rounds; i++) {
     let tx = tp0.x;
@@ -797,8 +798,8 @@ export function launch(
       if (!willHit) {
         const a = w.rng.next() * Math.PI * 2;
         const m = 3 + w.rng.next() * 8;
-        tx += Math.cos(a) * m;
-        ty += Math.sin(a) * m;
+        tx += dcos(a) * m;
+        ty += dsin(a) * m;
         target = null;
       }
     } else if (def.blast) {
@@ -856,8 +857,8 @@ export function launch(
     const v = w.vehicles[t.id];
     if (v.def.thermal && v.smokeSalvos > 0 && w.rng.next() < 0.45) {
       v.smokeSalvos--;
-      const a = Math.atan2(from.y - v.y, from.x - v.x);
-      for (let k = -1; k <= 1; k++) spawnSmoke(w, v.x + Math.cos(a + k * 0.4) * 22, v.y + Math.sin(a + k * 0.4) * 22, 12, 0.08, 45);
+      const a = datan2(from.y - v.y, from.x - v.x);
+      for (let k = -1; k <= 1; k++) spawnSmoke(w, v.x + dcos(a + k * 0.4) * 22, v.y + dsin(a + k * 0.4) * 22, 12, 0.08, 45);
       w.msg(v.side, `${w.units[v.unitId].name}: Missile launch detected — smoke!`, v.unitId, 'warn');
     }
   }
@@ -891,7 +892,7 @@ export function updateProjectiles(w: World): void {
 
 function impact(w: World, p: Projectile): void {
   const def = p.weapon;
-  if (w.dbg) w.curWeapon = `${p.heavy ? 'ARTILLERY' : def.name}${p.shooterVehicle >= 0 ? ` (${w.units[w.vehicles[p.shooterVehicle].unitId].name} @${Math.round(Math.hypot(p.tx - p.sx, p.ty - p.sy))}m)` : ''}`;
+  if (w.dbg) w.curWeapon = `${p.heavy ? 'ARTILLERY' : def.name}${p.shooterVehicle >= 0 ? ` (${w.units[w.vehicles[p.shooterVehicle].unitId].name} @${Math.round(dhypot(p.tx - p.sx, p.ty - p.sy))}m)` : ''}`;
   if (p.smoke) {
     spawnSmoke(w, p.tx, p.ty, 13, 0.08, 60);
     return;
@@ -973,14 +974,14 @@ function vehicleCombat(w: World, v: VehicleState): void {
   if (retarget) {
     const cands: { ref: TargetRef; x: number; y: number; h: number; unit: Unit; d: number }[] = [];
     if (pol.forcedPoint) {
-      cands.push({ ref: { kind: 'point', x: pol.forcedPoint.x, y: pol.forcedPoint.y }, x: pol.forcedPoint.x, y: pol.forcedPoint.y, h: 0.5, unit: u, d: Math.hypot(pol.forcedPoint.x - v.x, pol.forcedPoint.y - v.y) });
+      cands.push({ ref: { kind: 'point', x: pol.forcedPoint.x, y: pol.forcedPoint.y }, x: pol.forcedPoint.x, y: pol.forcedPoint.y, h: 0.5, unit: u, d: dhypot(pol.forcedPoint.x - v.x, pol.forcedPoint.y - v.y) });
     } else {
       for (const info of w.spotted[v.side].values()) {
         if (!info.visible) continue;
         if (pol.forcedUnit >= 0 && info.unitId !== pol.forcedUnit) continue;
         const eu = w.units[info.unitId];
         if (eu.eliminated || eu.mountedIn >= 0) continue;
-        const d0 = Math.hypot(info.x - v.x, info.y - v.y);
+        const d0 = dhypot(info.x - v.x, info.y - v.y);
         if (d0 > (eu.vehicle >= 0 ? pol.maxRangeArmor : pol.maxRange) + 30 || d0 > 3800) continue;
         if (eu.vehicle >= 0) {
           const ev = w.vehicles[eu.vehicle];
@@ -993,7 +994,7 @@ function vehicleCombat(w: World, v: VehicleState): void {
           for (const sid of eu.soldiers) {
             const o = w.soldiers[sid];
             if (!World.active(o) || o.vehicle >= 0) continue;
-            const d = Math.hypot(o.x - v.x, o.y - v.y);
+            const d = dhypot(o.x - v.x, o.y - v.y);
             if (d < bd) {
               bd = d;
               best = o;
@@ -1061,7 +1062,7 @@ function vehicleCombat(w: World, v: VehicleState): void {
   });
   if (turretTarget) {
     const tp = targetPoint(w, turretTarget);
-    slewTurret(v, Math.atan2(tp.y - v.y, tp.x - v.x));
+    slewTurret(v, datan2(tp.y - v.y, tp.x - v.x));
   } else if (w.time - v.lastHitT < 10 && v.lastThreatDir !== null) {
     slewTurret(v, v.lastThreatDir);
   } else if (Math.abs(v.speed) > 1) {
@@ -1083,7 +1084,7 @@ function vehicleCombat(w: World, v: VehicleState): void {
       continue;
     }
     const tp = targetPoint(w, t);
-    const ang = Math.atan2(tp.y - v.y, tp.x - v.x);
+    const ang = datan2(tp.y - v.y, tp.x - v.x);
     if (ws.mount === 'turret') {
       if (turretTarget && targetKey(turretTarget) !== targetKey(t)) {
         // coax can engage something else only if it's roughly in line
@@ -1116,7 +1117,7 @@ function vehicleCombat(w: World, v: VehicleState): void {
     if (u.order.kind === 'ambush') u.ai.sprungT = w.time;
     const barrel = ws.mount === 'turret' ? v.turret : ang;
     const reach = ws.mount === 'turret' ? v.def.length * 0.55 : 0.5;
-    const from = { x: v.x + Math.cos(barrel) * reach, y: v.y + Math.sin(barrel) * reach, z: w.map.groundAt(v.x, v.y) + v.def.height * 0.85 };
+    const from = { x: v.x + dcos(barrel) * reach, y: v.y + dsin(barrel) * reach, z: w.map.groundAt(v.x, v.y) + v.def.height * 0.85 };
     if (def.speed) {
       launch(w, def, v.side, -1, v.id, from, t, mod, rounds);
     } else {

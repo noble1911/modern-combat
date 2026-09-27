@@ -1,3 +1,4 @@
+import { datan2, dcos, dhypot, dsin } from './dmath';
 // Small math + RNG helpers shared by the simulation. No DOM / Three.js imports allowed in src/sim.
 
 export interface Vec2 {
@@ -9,23 +10,23 @@ export const v2 = (x: number, y: number): Vec2 => ({ x, y });
 export const add = (a: Vec2, b: Vec2): Vec2 => ({ x: a.x + b.x, y: a.y + b.y });
 export const sub = (a: Vec2, b: Vec2): Vec2 => ({ x: a.x - b.x, y: a.y - b.y });
 export const scale = (a: Vec2, s: number): Vec2 => ({ x: a.x * s, y: a.y * s });
-export const len = (a: Vec2): number => Math.hypot(a.x, a.y);
-export const dist = (a: Vec2, b: Vec2): number => Math.hypot(a.x - b.x, a.y - b.y);
+export const len = (a: Vec2): number => dhypot(a.x, a.y);
+export const dist = (a: Vec2, b: Vec2): number => dhypot(a.x - b.x, a.y - b.y);
 export const dist2 = (a: Vec2, b: Vec2): number => {
   const dx = a.x - b.x;
   const dy = a.y - b.y;
   return dx * dx + dy * dy;
 };
 export const norm = (a: Vec2): Vec2 => {
-  const l = Math.hypot(a.x, a.y);
+  const l = dhypot(a.x, a.y);
   return l > 1e-9 ? { x: a.x / l, y: a.y / l } : { x: 0, y: 0 };
 };
 export const lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
 export const lerpV = (a: Vec2, b: Vec2, t: number): Vec2 => ({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
 export const clamp = (v: number, lo: number, hi: number): number => (v < lo ? lo : v > hi ? hi : v);
-export const angleOf = (a: Vec2): number => Math.atan2(a.y, a.x);
-export const angleTo = (from: Vec2, to: Vec2): number => Math.atan2(to.y - from.y, to.x - from.x);
-export const fromAngle = (a: number, l = 1): Vec2 => ({ x: Math.cos(a) * l, y: Math.sin(a) * l });
+export const angleOf = (a: Vec2): number => datan2(a.y, a.x);
+export const angleTo = (from: Vec2, to: Vec2): number => datan2(to.y - from.y, to.x - from.x);
+export const fromAngle = (a: number, l = 1): Vec2 => ({ x: dcos(a) * l, y: dsin(a) * l });
 
 /** Wrap an angle to (-PI, PI]. */
 export function wrapAngle(a: number): number {
@@ -48,7 +49,7 @@ export function distToSegment(p: Vec2, a: Vec2, b: Vec2): number {
   const l2 = abx * abx + aby * aby;
   if (l2 < 1e-9) return dist(p, a);
   const t = clamp(((p.x - a.x) * abx + (p.y - a.y) * aby) / l2, 0, 1);
-  return Math.hypot(p.x - (a.x + abx * t), p.y - (a.y + aby * t));
+  return dhypot(p.x - (a.x + abx * t), p.y - (a.y + aby * t));
 }
 
 export function pointInPolygon(p: Vec2, poly: Vec2[]): boolean {
@@ -63,7 +64,8 @@ export function pointInPolygon(p: Vec2, poly: Vec2[]): boolean {
 
 /** Deterministic PRNG (mulberry32). */
 export class Rng {
-  private s: number;
+  /** Generator state (read by the multiplayer desync checksum). */
+  s: number;
   constructor(seed: number) {
     this.s = seed >>> 0 || 0x9e3779b9;
   }

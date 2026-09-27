@@ -4,6 +4,7 @@ import { findPath, nearestPassable } from './pathfinding';
 import { CELL, T } from './terrain';
 import type { MoraleState, Soldier, Unit } from './types';
 import { DT, World } from './world';
+import { dcos, dhypot, dsin } from './dmath';
 
 const STATE_LABEL: Record<MoraleState, string> = {
   ready: 'Ready',
@@ -28,8 +29,8 @@ export function updateMorale(w: World): void {
     const t = w.map.type[cy * w.map.w + cx] as T;
     const inCover = t === T.Building || t === T.Forest || t === T.Rubble || t === T.Crater || w.map.cellCoverScore(cx, cy) > 0.3;
     const leader = w.leaderOf(u);
-    const leaderNear = !!leader && leader !== s && Math.hypot(leader.x - s.x, leader.y - s.y) < 40;
-    const hqNear = hqs.some((h) => h.side === s.side && Math.hypot(h.p.x - s.x, h.p.y - s.y) < 80);
+    const leaderNear = !!leader && leader !== s && dhypot(leader.x - s.x, leader.y - s.y) < 40;
+    const hqNear = hqs.some((h) => h.side === s.side && dhypot(h.p.x - s.x, h.p.y - s.y) < 80);
     let decay = (4 + 6 * s.exp) * (inCover ? 1.35 : 1) * (leaderNear ? 1.2 : 1) * (hqNear ? 1.15 : 1);
     if (s.vehicle >= 0) decay *= 1.5;
     s.supp = Math.max(0, s.supp - decay * DT);
@@ -140,7 +141,7 @@ function moraleTick(w: World, s: Soldier, u: Unit): void {
       for (const id of w.units[info.unitId].soldiers) {
         const o = w.soldiers[id];
         if (!World.active(o) || o.vehicle >= 0) continue;
-        const d = Math.hypot(o.x - s.x, o.y - s.y);
+        const d = dhypot(o.x - s.x, o.y - s.y);
         if (d < bd) {
           bd = d;
           best = o;
@@ -163,7 +164,7 @@ function tankFear(w: World, s: Soldier, u: Unit): boolean {
     if (v.side === s.side || v.destroyed || v.abandoned) continue;
     if (v.def.armor.front < 300) continue;
     if (!w.isVisibleTo(s.side, v.unitId)) continue;
-    if (Math.hypot(v.x - s.x, v.y - s.y) < 220) return true;
+    if (dhypot(v.x - s.x, v.y - s.y) < 220) return true;
   }
   return false;
 }
@@ -184,7 +185,7 @@ function maybeBail(w: World, s: Soldier, u: Unit): void {
   } else if (v.path === null && s.crewSeat === 0) {
     // reverse away from the threat
     const a = (v.lastThreatDir ?? v.heading) + Math.PI;
-    const dest = nearestPassable(w.map, v.x + Math.cos(a) * 60, v.y + Math.sin(a) * 60, v.def.mobility, 8);
+    const dest = nearestPassable(w.map, v.x + dcos(a) * 60, v.y + dsin(a) * 60, v.def.mobility, 8);
     if (dest && !v.immobilized) {
       v.path = findPath(w.map, v, dest, { mob: v.def.mobility, maxNodes: 6000 });
       v.pathIdx = 0;
@@ -200,10 +201,10 @@ function flee(w: World, s: Soldier, u: Unit): void {
   let ax = rear.x;
   let ay = rear.y;
   if (threat !== undefined) {
-    ax = ax * 0.5 - Math.cos(threat);
-    ay = ay * 0.5 - Math.sin(threat);
+    ax = ax * 0.5 - dcos(threat);
+    ay = ay * 0.5 - dsin(threat);
   }
-  const l = Math.hypot(ax, ay) || 1;
+  const l = dhypot(ax, ay) || 1;
   ax /= l;
   ay /= l;
   const routing = s.state === 'routing';

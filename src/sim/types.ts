@@ -156,6 +156,8 @@ export interface Unit {
   facing: number;
   charges: number;
   expLevel: number;
+  /** Multiplayer: the player slot that commands this unit (undefined: whoever plays the side). */
+  slot?: number;
   /** Unit has been fired upon recently (for ambush triggers / AI) */
   underFireT: number;
   lastCasualtyT: number;

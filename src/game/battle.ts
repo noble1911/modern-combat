@@ -6,13 +6,17 @@ import { lightingForSeed } from '../render/atmosphere';
 import { BattleView, GraphicsSettings } from '../render/battleView';
 import { ModelLib } from '../render/models';
 import { portraitBg } from '../render/portraits';
+import type { NetClient } from '../net/client';
+import { INPUT_DELAY, Lockstep } from '../net/lockstep';
+import type { Command, NetSetup, ServerMsg, StepBatch } from '../net/protocol';
+import { Session } from '../net/session';
 import { weaponCell } from '../ui/unitInfo';
 import { weaponIcon } from '../ui/weaponIcons';
 import { drawSymbol, ORDER_COLORS } from '../render/overlays';
 import { placeUnit } from '../sim/ai';
 import { shooterMod } from '../sim/combat';
 import { angleTo, clamp, Vec2 } from '../sim/math';
-import { availableOrders, freeSeats, issueOrder } from '../sim/orders';
+import { availableOrders, checkOrder, freeSeats, issueOrder } from '../sim/orders';
 import { nearestPassable } from '../sim/pathfinding';
 import { EYE } from '../sim/spotting';
 import type { BattleResult, Order, OrderKind, Unit } from '../sim/types';
@@ -26,6 +30,16 @@ export interface BattleOptions {
   gfx: GraphicsSettings;
   sound: SoundEngine;
   onExit: (world: World, result: BattleResult | null, quit: boolean) => void;
+  /** Multiplayer: the relay connection, our slot and the shared battle definition. */
+  net?: {
+    client: NetClient;
+    slot: number;
+    game: NetSetup;
+    /** Rejoining a battle in progress (page reload): the relay's log to replay. */
+    resume?: { log: ({ p: number } & StepBatch)[]; last: Record<number, number> };
+    /** Messages that arrived while the screen was being built (steps must not be lost). */
+    pending?: ServerMsg[];
+  };
 }
 
 const ORDER_LABEL: Record<OrderKind, string> = {
@@ -164,10 +178,22 @@ export class BattleScreen {
   private endShown = false;
   private groups = new Map<number, number[]>();
   private disposed = false;
+  // multiplayer
+  private session: Session | null = null;
+  private lockstep: Lockstep | null = null;
+  private netAcc = 0;
+  private stallT = 0;
+  private replaying = false;
+  private desyncWarned = false;
+  private netDown = false;
+  private wasPhase: World['phase'] = 'deploy';
+  private netInfo: HTMLDivElement | null = null;
+  private lastSync = 0;
 
   constructor(container: HTMLElement, private opts: BattleOptions) {
-    this.player = opts.setup.player ?? 'nato';
+    this.player = opts.net ? opts.net.game.players.find((p) => p.slot === opts.net!.slot)!.side : (opts.setup.player ?? 'nato');
     this.world = createBattle(opts.setup);
+    this.wasPhase = this.world.phase;
     this.root = el('div', 'screen battle');
     container.appendChild(this.root);
     this.view = new BattleView(this.root, this.world, opts.models, this.player, opts.gfx, opts.setup.lighting ?? lightingForSeed(opts.setup.seed));
@@ -178,14 +204,15 @@ export class BattleScreen {
     this.tip = el('div', 'tip');
     this.tip.style.display = 'none';
     this.root.append(this.boxEl, this.tip);
+    if (opts.net) this.initNet();
     this.hud = this.buildHud();
     this.bindInput();
     window.addEventListener('resize', this.onResize);
     this.raf = nextFrame(this.frame);
     // select first unit for convenience
-    const first = this.world.units.find((u) => u.side === this.player);
+    const first = this.world.units.find((u) => this.mine(u));
     if (first) this.select([first.id]);
-    this.showBriefing();
+    if (this.world.phase === 'deploy') this.showBriefing();
   }
 
   private showBriefing(): void {
@@ -204,6 +231,7 @@ export class BattleScreen {
        <p style="color:var(--dim);line-height:1.5">${def.description}</p>
        <p><b>Mission:</b> ${posture === 'attack' ? 'ATTACK — seize the victory locations and break the defenders.' : 'DEFEND — hold the victory locations until the enemy attack is spent.'}</p>
        <ul style="line-height:1.6;margin:6px 0 10px 18px;padding:0">${vls}</ul>
+       ${this.netBriefing()}
        <p style="color:var(--dim)">Our force: ${own.length} units (${vehicles(own)} vehicles). Intelligence estimates ${foes.length} enemy units${vehicles(foes) ? ` including about ${vehicles(foes)} armoured vehicles` : ''}.</p>
        <p style="color:var(--dim);font-size:12px">Time limit ${Math.round(w.timeLimit / 60)} minutes. The battle also ends if either side's force morale collapses.<br>Deploy inside the shaded zone, then press <b>Begin Battle</b>. Press <b>Space</b> to pause at any time — orders can be given while paused.</p>`,
       [['To deployment ▸', () => undefined, true]],
@@ -212,6 +240,7 @@ export class BattleScreen {
 
   destroy(): void {
     this.disposed = true;
+    this.opts.net?.client.close();
     cancelFrame(this.raf);
     window.removeEventListener('resize', this.onResize);
     window.removeEventListener('keydown', this.onKey);
@@ -227,18 +256,42 @@ export class BattleScreen {
     const dt = Math.min(0.1, (now - this.last) / 1000);
     this.last = now;
     const w = this.world;
-    if (!this.paused && w.phase === 'battle') {
-      this.acc += dt * this.speed;
-      let steps = 0;
-      while (this.acc >= DT && steps < 60) {
-        w.step();
-        this.acc -= DT;
-        steps++;
-        this.processEvents();
-        if (w.phase !== 'battle') break;
+    let alpha = 1;
+    if (this.lockstep) {
+      // multiplayer: steps run in real time as fast as every player's input allows
+      const ls = this.lockstep;
+      this.netAcc += dt;
+      const due = Math.floor(this.netAcc / DT);
+      if (due > 0) {
+        const ran = ls.pump(ls.step + Math.min(due, 5));
+        this.netAcc -= ran * DT;
+        // don't bank time while stalled, or the battle would race to catch up afterwards
+        if (ls.waitingFor.length) this.netAcc = Math.min(this.netAcc, DT * 2);
       }
-    } else if (w.phase !== 'battle') this.processEvents();
-    const alpha = w.phase === 'battle' && !this.paused ? Math.min(1, this.acc / DT) : 1;
+      this.stallT = ls.waitingFor.length ? this.stallT + dt : 0;
+      // stuck for a while (a batch lost in transit?): ask the relay for the log again
+      if (this.stallT > 3 && performance.now() - this.lastSync > 3000) {
+        this.lastSync = performance.now();
+        this.opts.net!.client.send({ t: 'sync' });
+      }
+      this.paused = this.session!.paused;
+      if (this.wasPhase === 'deploy' && w.phase !== 'deploy') this.onBattleStarted();
+      this.wasPhase = w.phase;
+      if (w.phase === 'battle' && !this.paused) alpha = Math.min(1, this.netAcc / DT);
+    } else {
+      if (!this.paused && w.phase === 'battle') {
+        this.acc += dt * this.speed;
+        let steps = 0;
+        while (this.acc >= DT && steps < 60) {
+          w.step();
+          this.acc -= DT;
+          steps++;
+          this.processEvents();
+          if (w.phase !== 'battle') break;
+        }
+      } else if (w.phase !== 'battle') this.processEvents();
+      alpha = w.phase === 'battle' && !this.paused ? Math.min(1, this.acc / DT) : 1;
+    }
     this.opts.sound.setListener(this.view.cam.target.x, -this.view.cam.target.z, this.view.cam.dist);
     const animDt = this.paused ? 0 : dt * (w.phase === 'battle' ? this.speed : 1);
     this.view.render(dt, alpha, animDt);
@@ -285,7 +338,8 @@ export class BattleScreen {
     const vls = el('div', 'vl-chips');
     const speed = el('div', 'speed');
     const speedBtns: HTMLButtonElement[] = [];
-    const speeds: [string, number][] = [['❚❚', 0], ['1×', 1], ['2×', 2], ['4×', 4]];
+    // multiplayer runs at 1×: ❚❚ asks to pause, ▶ votes to resume
+    const speeds: [string, number][] = this.opts.net ? [['❚❚', 0], ['▶', 1]] : [['❚❚', 0], ['1×', 1], ['2×', 2], ['4×', 4]];
     for (const [label, s] of speeds) {
       const b = el('button', 'btn small', label);
       b.onclick = () => this.setSpeed(s);
@@ -311,11 +365,15 @@ export class BattleScreen {
     miniWrap.appendChild(mini);
     const banner = el('div', 'center-banner', '');
     this.root.append(top, roster, msgs, detail, miniWrap, banner);
+    if (this.opts.net) {
+      this.netInfo = el('div', 'net-info panel');
+      this.root.appendChild(this.netInfo);
+    }
     let deploy: HTMLDivElement | null = null;
     if (this.world.phase === 'deploy') {
       deploy = el('div', 'deploy-bar panel');
       deploy.innerHTML = `<div><b style="color:var(--accent)">DEPLOYMENT</b> — select a unit, then left-click inside the shaded zone to place it. Right-click sets its facing.</div>`;
-      const go = el('button', 'btn primary', 'Begin Battle ▸');
+      const go = el('button', 'btn primary', this.opts.net ? 'Ready ▸' : 'Begin Battle ▸');
       go.onclick = () => this.beginBattle();
       deploy.appendChild(go);
       this.root.appendChild(deploy);
@@ -345,7 +403,7 @@ export class BattleScreen {
     roster.innerHTML = '';
     this.cards.clear();
     for (const u of this.world.units) {
-      if (u.side !== this.player) continue;
+      if (!this.ownRoster(u)) continue;
       const c = el('div', 'card');
       c.innerHTML = `<div class="pic" style="${portraitBg(u.template)}"><img class="sym" src="${symbolURL(u.side, u.template.symbol)}"></div><div class="nm"></div><div class="st"><span class="s1"></span><span class="s2"></span></div><div class="str"></div>`;
       c.title = u.template.name;
@@ -372,7 +430,7 @@ export class BattleScreen {
     const vals = [0, 1, 2, 4];
     this.hud.speedBtns.forEach((b, i) => b.classList.toggle('active', vals[i] === sp));
     // roster
-    const own = w.units.filter((u) => u.side === this.player);
+    const own = w.units.filter((u) => this.ownRoster(u));
     if (own.length !== this.cards.size) this.buildRoster(this.hud.roster);
     for (const u of own) {
       const c = this.cards.get(u.id)!;
@@ -391,6 +449,7 @@ export class BattleScreen {
       str.style.background = frac > 0.66 ? 'var(--good)' : frac > 0.33 ? 'var(--warn)' : 'var(--bad)';
     }
     this.updateDetail();
+    this.updateNetInfo();
     // fade messages
     const nowMs = performance.now();
     for (const m of [...this.hud.msgs.children] as HTMLElement[]) {
@@ -575,7 +634,7 @@ export class BattleScreen {
     this.selected.clear();
     for (const id of ids) {
       const u = this.world.units[id];
-      if (u.side === this.player && !u.eliminated && !u.withdrawn) this.selected.add(id);
+      if (this.mine(u)) this.selected.add(id);
     }
     this.hudT = 0;
   }
@@ -595,7 +654,8 @@ export class BattleScreen {
     if (kind === 'none') {
       for (const id of this.selected) {
         const u = this.world.units[id];
-        issueOrder(this.world, id, { kind: 'defend', target: undefined, facing: u.facing });
+        if (this.lockstep) this.lockstep.submit({ k: 'order', unit: id, kind: 'defend', facing: u.facing });
+        else issueOrder(this.world, id, { kind: 'defend', target: undefined, facing: u.facing });
       }
       this.opts.sound.blip();
       return;
@@ -622,7 +682,9 @@ export class BattleScreen {
       o.targetUnit = targetUnit;
     }
     if (kind === 'fire' && o.targetUnit === undefined && !o.target) return false;
-    const r = issueOrder(w, unitId, o);
+    // multiplayer: check now for instant feedback, apply when everyone reaches the step
+    const r = this.lockstep ? checkOrder(w, u, o) : issueOrder(w, unitId, o);
+    if (r.ok && this.lockstep) this.lockstep.submit({ k: 'order', unit: unitId, kind: o.kind, target: o.target, targetUnit: o.targetUnit, facing: o.facing });
     if (!r.ok) {
       this.pushMsg(`${u.name}: ${r.reason}`, 'warn', unitId);
       this.opts.sound.blip('bad');
@@ -828,7 +890,8 @@ export class BattleScreen {
     }
     if (code === 'Space') {
       e.preventDefault();
-      this.paused = !this.paused;
+      if (this.lockstep) this.lockstep.submit({ k: this.session!.paused ? 'resume' : 'pause' });
+      else this.paused = !this.paused;
       this.hudT = 0;
       return;
     }
@@ -882,6 +945,13 @@ export class BattleScreen {
   };
 
   private setSpeed(s: number): void {
+    if (this.lockstep) {
+      // multiplayer runs at 1×; either player may pause, everyone must agree to resume
+      if (s === 0 && !this.session!.paused) this.lockstep.submit({ k: 'pause' });
+      else if (s !== 0 && this.session!.paused) this.lockstep.submit({ k: 'resume' });
+      this.hudT = 0;
+      return;
+    }
     if (s === 0) this.paused = true;
     else {
       this.paused = false;
@@ -900,7 +970,7 @@ export class BattleScreen {
     const ids: number[] = add ? [...this.selected] : [];
     const v = new THREE.Vector3();
     for (const u of this.world.units) {
-      if (u.side !== this.player || u.eliminated || u.withdrawn) continue;
+      if (!this.mine(u)) continue;
       const p = this.world.unitPos(u);
       v.set(p.x, this.world.map.groundAt(p.x, p.y) + 1, -p.y).project(this.view.cam.camera);
       const sx = ((v.x + 1) / 2) * r.width;
@@ -925,7 +995,7 @@ export class BattleScreen {
       this.deployTo([...this.selected][0], gp);
       return;
     }
-    if (hov >= 0 && w.units[hov].side === this.player) {
+    if (hov >= 0 && this.mine(w.units[hov])) {
       if (shift) this.toggleSelect(hov);
       else this.select([hov]);
       return;
@@ -940,6 +1010,11 @@ export class BattleScreen {
     if (p.x < z.x || p.y < z.y || p.x > z.x + z.w || p.y > z.y + z.h) {
       this.pushMsg('Units must be placed inside your deployment zone.', 'warn', -1);
       this.opts.sound.blip('bad');
+      return;
+    }
+    if (this.lockstep) {
+      this.lockstep.submit({ k: 'place', unit: unitId, x: p.x, y: p.y });
+      this.opts.sound.blip();
       return;
     }
     const mob = u.vehicle >= 0 ? w.vehicles[u.vehicle].def.mobility : 'foot';
@@ -961,6 +1036,10 @@ export class BattleScreen {
       for (const id of this.selected) {
         const u = w.units[id];
         const p = w.unitPos(u);
+        if (this.lockstep) {
+          this.lockstep.submit({ k: 'face', unit: id, facing: angleTo(p, gp) });
+          continue;
+        }
         placeUnit(w, u, u.vehicle >= 0 ? p : u.holdPos ?? p, angleTo(p, gp));
         u.order = { kind: 'defend', issuedAt: 0, facing: u.facing };
       }
@@ -1004,7 +1083,21 @@ export class BattleScreen {
 
   // ------------------------------------------------------------------ flow
   private beginBattle(): void {
+    if (this.lockstep) {
+      // everyone has to finish deploying; the battle starts at the same step for all
+      this.lockstep.submit({ k: 'ready' });
+      const go = this.hud.deploy?.querySelector('button');
+      if (go) {
+        go.disabled = true;
+        go.textContent = 'Ready ✓';
+      }
+      return;
+    }
     this.world.startBattle();
+    this.onBattleStarted();
+  }
+
+  private onBattleStarted(): void {
     this.view.overlays.showDeployZone(null);
     this.hud.deploy?.remove();
     this.hud.deploy = null;
@@ -1031,6 +1124,7 @@ export class BattleScreen {
   }
 
   private showPauseMenu(): void {
+    if (this.lockstep) return this.showNetMenu();
     const wasPaused = this.paused;
     this.paused = true;
     const w = this.world;
@@ -1054,6 +1148,7 @@ export class BattleScreen {
   }
 
   private requestCeasefire(): void {
+    if (this.lockstep) return this.lockstep.submit({ k: 'ceasefire' });
     const w = this.world;
     this.paused = false;
     if (w.phase === 'deploy') return;
@@ -1063,6 +1158,157 @@ export class BattleScreen {
     const enemyFm = w.forceMorale[otherSide(this.player)];
     if (theirs >= mine || enemyFm < 45 || w.time > w.timeLimit * 0.6) w.endBattle(null, 'Cease-fire agreed.');
     else this.pushMsg('The enemy refuses a cease-fire.', 'warn', -1);
+  }
+
+  /** Units the local player may select and command. */
+  private mine(u: Unit): boolean {
+    if (this.session) return this.session.canCommand(this.opts.net!.slot, u.id);
+    return u.side === this.player && !u.eliminated && !u.withdrawn;
+  }
+
+  /** Units shown on our roster (in co-op, only our share of the side). */
+  private ownRoster(u: Unit): boolean {
+    if (u.side !== this.player) return false;
+    return !this.opts.net || u.slot === undefined || u.slot === this.opts.net.slot;
+  }
+
+  // ------------------------------------------------------------------ multiplayer
+  private initNet(): void {
+    const n = this.opts.net!;
+    this.session = new Session(this.world, n.game.mode, n.game.players);
+    this.lockstep = new Lockstep(this.session, n.slot, {
+      send: (b) => n.client.send({ t: 'step', ...b }),
+      afterStep: () => {
+        if (this.replaying) this.world.events.length = 0;
+        else this.processEvents();
+        for (const m of this.session!.notices.splice(0)) if (!this.replaying) this.pushMsg(m.text, m.level, -1);
+      },
+      desync: (step, slot) => {
+        console.warn(`multiplayer desync with slot ${slot} at step ${step}`);
+        if (this.desyncWarned) return;
+        this.desyncWarned = true;
+        this.pushMsg(`Your battle is out of sync with ${this.session!.player(slot)?.name ?? 'the other player'} (${fmtTime(step / 10)}). Outcomes may differ between your screens.`, 'alert', -1);
+      },
+    });
+    n.client.onMessage = (m) => this.onNet(m);
+    for (const m of n.pending?.splice(0) ?? []) this.onNet(m);
+    n.client.onStatus = (st) => {
+      if (st === 'reconnecting' && !this.netDown) this.pushMsg('Connection lost. Reconnecting…', 'warn', -1);
+      if (st === 'open' && this.netDown) this.pushMsg('Reconnected.', 'good', -1);
+      this.netDown = st !== 'open';
+    };
+    if (n.resume) {
+      // rejoining after a reload: replay the battle so far (silently, at full speed)
+      this.feed(n.resume.log, n.resume.last, false);
+      this.replaying = true;
+      // up to where the battle had got to (not beyond: with everyone else gone, nothing would stop it)
+      const end = Math.max(...Object.values(n.resume.last), 0) + 1;
+      while (this.lockstep.step < end && this.lockstep.pump(end, 5000) > 0);
+      this.replaying = false;
+      this.world.events.length = 0;
+    }
+  }
+
+  /** Batches from the relay's log (after a reload or reconnect) into the lockstep inbox. */
+  private feed(log: ({ p: number } & StepBatch)[], last: Record<number, number>, live: boolean): void {
+    const ls = this.lockstep!;
+    const me = this.opts.net!.slot;
+    const logged = new Map<number, Map<number, Command[]>>();
+    for (const e of log) {
+      let m = logged.get(e.p);
+      if (!m) logged.set(e.p, (m = new Map()));
+      if (e.c) m.set(e.s, e.c);
+    }
+    for (const p of this.session!.players) {
+      const upTo = last[p.slot] ?? -1;
+      if (p.slot === me && live) {
+        ls.resendFrom(upTo); // the relay may have missed some of ours while we were away
+        continue;
+      }
+      const m = logged.get(p.slot);
+      for (let s = Math.max(ls.step, INPUT_DELAY); s <= upTo; s++) ls.receive(p.slot, { s, c: m?.get(s) });
+      if (p.slot === me) ls.setSentUpTo(upTo);
+    }
+  }
+
+  private onNet(m: ServerMsg): void {
+    const ls = this.lockstep!;
+    const me = this.opts.net!.slot;
+    switch (m.t) {
+      case 'step':
+        ls.receive(m.p, m);
+        return;
+      case 'drop':
+        ls.drop(m.slot, m.from);
+        return;
+      case 'resume':
+        this.feed(m.log, m.last, true);
+        return;
+      case 'presence': {
+        const p = this.session!.player(m.slot);
+        if (p && p.slot !== me && !ls.leaving(p.slot)) this.pushMsg(m.connected ? `${p.name} is back.` : `${p.name} lost connection. Waiting for them to return…`, m.connected ? 'good' : 'warn', -1);
+        return;
+      }
+      case 'chat':
+        this.pushMsg(`${m.name}: ${m.text}`, 'info', -1);
+        return;
+      case 'error':
+        this.pushMsg(m.msg, 'warn', -1);
+        return;
+    }
+  }
+
+  private netBriefing(): string {
+    const n = this.opts.net;
+    if (!n) return '';
+    const others = n.game.players.filter((p) => p.slot !== n.slot);
+    const names = others.map((p) => `<b>${p.name}</b>`).join(', ');
+    return n.game.mode === 'versus'
+      ? `<p><b>Head to head:</b> you command ${FACTIONS[this.player].short}; ${names} commands ${FACTIONS[otherSide(this.player)].short}. Either of you can pause with Space; the battle resumes when you have both pressed it again.</p>`
+      : `<p><b>Co-op:</b> you and ${names} share ${FACTIONS[this.player].short} against the AI. Your roster holds your own units; your partner commands theirs.</p>`;
+  }
+
+  /** Status strip for multiplayer: who paused, who we're waiting for, readiness. */
+  private updateNetInfo(): void {
+    const box = this.netInfo;
+    const s = this.session;
+    if (!box || !s) return;
+    const w = this.world;
+    const me = this.opts.net!.slot;
+    const name = (slot: number) => (slot === me ? 'You' : (s.player(slot)?.name ?? '?'));
+    let html = '';
+    if (this.stallT > 0.6 && this.lockstep!.waitingFor.length) html = `<span class="warn">Waiting for ${this.lockstep!.waitingFor.map(name).join(', ')}…</span>`;
+    else if (w.phase === 'deploy') {
+      html = s.active.map((p) => `${name(p.slot)} ${s.ready.has(p.slot) ? '<span class="ok">ready ✓</span>' : '<span class="dim">deploying…</span>'}`).join(' · ');
+    } else if (s.paused) {
+      const votes = s.active.filter((p) => s.resumeVotes.has(p.slot)).length;
+      html = `<b>❚❚ Paused</b> by ${name(s.pausedBy)} · resume ${votes}/${s.active.length}${s.resumeVotes.has(me) ? '' : ' — press <b>Space</b> to resume'}`;
+    } else {
+      const others = s.players.filter((p) => p.slot !== me);
+      html = others.map((p) => `<span class="${s.dropped.has(p.slot) ? 'dim' : 'ok'}">●</span> ${p.name}${s.dropped.has(p.slot) ? ' (left)' : ''}`).join(' · ');
+    }
+    if (box.dataset.html !== html) {
+      box.innerHTML = html;
+      box.dataset.html = html;
+    }
+  }
+
+  private showNetMenu(): void {
+    const n = this.opts.net!;
+    const vol = Math.round(this.opts.sound.volume * 100);
+    const back = this.modal(
+      `<h2>Battle menu</h2><p style="color:var(--dim)">${this.opts.title} — ${fmtTime(this.world.time)} elapsed. The battle keeps running while this is open.</p>
+       <label>Sound volume <input type="range" min="0" max="100" value="${vol}" id="vol"></label><br><br>
+       <p style="color:var(--dim);font-size:12px">Withdrawing concedes the battle. ${n.game.mode === 'versus' ? 'A cease-fire needs both commanders to request it.' : 'The AI decides whether to accept a cease-fire.'} Leaving hands your units to ${n.game.mode === 'coop' ? 'your partner' : 'the AI'}.</p>`,
+      [
+        ['Leave battle', () => this.opts.onExit(this.world, null, true)],
+        ['Withdraw', () => this.lockstep!.submit({ k: 'withdraw' })],
+        ['Request cease-fire', () => this.lockstep!.submit({ k: 'ceasefire' })],
+        ['Close', () => undefined, true],
+      ],
+    );
+    const volEl = back.querySelector('#vol') as HTMLInputElement;
+    volEl.oninput = () => this.opts.sound.setVolume(Number(volEl.value) / 100);
   }
 
   private showEnd(): void {

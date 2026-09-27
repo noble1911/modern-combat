@@ -25,6 +25,7 @@ import { updateSupport } from './support';
 import { updateVictory, computeForceMorale } from './victory';
 import { updateOrders } from './orders';
 import { updateAI } from './ai';
+import { dcos, dsin } from './dmath';
 
 export const DT = 0.1;
 
@@ -46,6 +47,8 @@ export interface SpawnOptions {
   /** Soldier health overrides for campaign carry-over (per soldier index). */
   soldierHealth?: ('ok' | 'wounded' | 'dead')[];
   charges?: number;
+  /** Multiplayer: the player slot commanding this unit. */
+  slot?: number;
 }
 
 export class World {
@@ -208,6 +211,7 @@ export class World {
       facing,
       charges: opts.charges ?? tpl.charges ?? 0,
       expLevel: exp,
+      slot: opts.slot,
       underFireT: -100,
       lastCasualtyT: -100,
       alive: 0,
@@ -272,7 +276,7 @@ export class World {
       specs.forEach((spec, i) => {
         const ang = facing + Math.PI + (i - specs.length / 2) * 0.35;
         const r = i === 0 ? 0 : 3 + (i % 3) * 1.5;
-        const p = { x: pos.x + Math.cos(ang) * r, y: pos.y + Math.sin(ang) * r };
+        const p = { x: pos.x + dcos(ang) * r, y: pos.y + dsin(ang) * r };
         const s = this.makeSoldier(unit, side, spec.role, spec.rank, !!spec.leader, p, exp);
         for (const [wid, ammo] of spec.weapons) s.weapons.push(this.makeWeapon(wid, ammo));
         const hs = opts.soldierHealth?.[i];
@@ -565,8 +569,8 @@ export class World {
       s.vehicle = -1;
       s.crewSeat = -1;
       s.leader = i === 0;
-      s.x = s.px = v.x + Math.cos(a) * (v.def.length / 2 + 2);
-      s.y = s.py = v.y + Math.sin(a) * (v.def.length / 2 + 2);
+      s.x = s.px = v.x + dcos(a) * (v.def.length / 2 + 2);
+      s.y = s.py = v.y + dsin(a) * (v.def.length / 2 + 2);
       s.stance = 'prone';
       s.supp = Math.max(s.supp, 70);
       s.morale = Math.min(s.morale, 35);

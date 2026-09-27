@@ -7,6 +7,7 @@ import { nearestPassable } from './pathfinding';
 import { CELL, T } from './terrain';
 import type { Order, Unit, VictoryLocation } from './types';
 import { World } from './world';
+import { dcos, dhypot, dsin } from './dmath';
 
 export type Posture = 'attack' | 'defend';
 
@@ -88,8 +89,8 @@ export function findPosition(
   for (let i = 0; i < samples; i++) {
     const a = w.rng.next() * Math.PI * 2;
     const r = Math.sqrt(w.rng.next()) * radius;
-    const x = clamp(near.x + Math.cos(a) * r, CELL * 2, map.width - CELL * 2);
-    const y = clamp(near.y + Math.sin(a) * r, CELL * 2, map.height - CELL * 2);
+    const x = clamp(near.x + dcos(a) * r, CELL * 2, map.width - CELL * 2);
+    const y = clamp(near.y + dsin(a) * r, CELL * 2, map.height - CELL * 2);
     const [cx, cy] = map.cellOf(x, y);
     if (map.speedFactor(cx, cy, mob) <= 0) continue;
     if (clear && !clear[cy * map.w + cx]) continue;
@@ -105,7 +106,7 @@ export function findPosition(
     }
     score -= (r / Math.max(1, radius)) * 0.4;
     if (lookAt) {
-      const d = Math.hypot(lookAt.x - x, lookAt.y - y);
+      const d = dhypot(lookAt.x - x, lookAt.y - y);
       if (opts.minDistFromLook && d < opts.minDistFromLook) continue;
       const los = map.los(x, y, opts.eye ?? (opts.vehicle ? 2.6 : 1.1), lookAt.x, lookAt.y, 1.0, 1, 4);
       if (los.clear) score += 1.0 - los.obstruction * 0.5;
@@ -125,7 +126,7 @@ function knownEnemiesNear(w: World, side: Side, p: Vec2, r: number): { unit: Uni
     if (w.time - info.lastSeen > 60) continue;
     const u = w.units[info.unitId];
     if (u.eliminated || u.withdrawn) continue;
-    if (Math.hypot(info.x - p.x, info.y - p.y) <= r) out.push({ unit: u, x: info.x, y: info.y });
+    if (dhypot(info.x - p.x, info.y - p.y) <= r) out.push({ unit: u, x: info.x, y: info.y });
   }
   return out;
 }
@@ -151,7 +152,7 @@ function pickObjective(w: World, side: Side): VictoryLocation | null {
   let bestScore = -Infinity;
   for (const vl of w.vls) {
     if (vl.owner === side && !vl.contested) continue;
-    const d = Math.hypot(vl.x - cx, vl.y - cy);
+    const d = dhypot(vl.x - cx, vl.y - cy);
     const enemies = knownEnemiesNear(w, side, vl, 120).length;
     const score = vl.value * 2 - d / 60 - enemies * 0.8 + (vl.contested ? 2 : 0);
     if (score > bestScore) {
@@ -179,7 +180,7 @@ export function aiDeploy(w: World, side: Side): void {
       const vl = ownVLs[i % ownVLs.length];
       const toward = angleTo(vl, enemyC);
       const fwd = role === 'antiarmor' || role === 'support' ? 60 : role === 'hq' ? -40 : 15;
-      anchor = inZone({ x: vl.x + Math.cos(toward) * fwd + (w.rng.next() - 0.5) * 80, y: vl.y + Math.sin(toward) * fwd + (w.rng.next() - 0.5) * 80 });
+      anchor = inZone({ x: vl.x + dcos(toward) * fwd + (w.rng.next() - 0.5) * 80, y: vl.y + dsin(toward) * fwd + (w.rng.next() - 0.5) * 80 });
     } else {
       // attackers / support: spread along the front edge of the zone
       const t = (i + 0.5) / units.length;
@@ -230,7 +231,7 @@ export function placeUnit(w: World, u: Unit, p: Vec2, facing: number): void {
     if (!map.inBounds(cx, cy) || map.speedFactor(cx, cy, 'foot') <= 0) continue;
     const tt = map.type[cy * map.w + cx] as T;
     if (tt === T.Hedge || tt === T.Wall) continue;
-    const s = map.cellCoverScore(cx, cy) - Math.hypot(dx, dy) * 0.08;
+    const s = map.cellCoverScore(cx, cy) - dhypot(dx, dy) * 0.08;
     cells.push({ x: (cx + 0.5) * CELL, y: (cy + 0.5) * CELL, s });
   }
   cells.sort((a, b) => b.s - a.s);
@@ -321,7 +322,7 @@ function think(w: World, u: Unit, st: SideAI): void {
     const recentlyHit = w.time - v.lastHitT < 6;
     if (recentlyHit && v.def.armor.front < 100 && !v.immobilized && u.order.kind !== 'reverse') {
       const away = (v.lastThreatDir ?? v.heading) + Math.PI;
-      const dest = findPosition(w, { x: v.x + Math.cos(away) * 90, y: v.y + Math.sin(away) * 90 }, 50, null, { vehicle: true, samples: 12 });
+      const dest = findPosition(w, { x: v.x + dcos(away) * 90, y: v.y + dsin(away) * 90 }, 50, null, { vehicle: true, samples: 12 });
       if (order(w, u, { kind: 'reverse', target: dest })) return;
     }
     if (recentlyHit && v.smokeSalvos > 0 && avail.includes('smoke') && w.rng.next() < 0.5) {
@@ -427,7 +428,7 @@ function defendThink(w: World, u: Unit, st: SideAI, role: Role, obj: VictoryLoca
       threats.sort((a, b) => dist(pos, a) - dist(pos, b));
       face = angleTo(pos, threats[0]);
     }
-    order(w, u, { kind: 'defend', target: { x: pos.x + Math.cos(face) * 50, y: pos.y + Math.sin(face) * 50 } });
+    order(w, u, { kind: 'defend', target: { x: pos.x + dcos(face) * 50, y: pos.y + dsin(face) * 50 } });
     u.ai.task = u.ai.task ?? 'hold';
   }
 }
@@ -467,7 +468,7 @@ function attackThink(w: World, u: Unit, st: SideAI, role: Role, obj: VictoryLoca
         return;
       }
       const toward = angleTo(pos, obj);
-      const stop = { x: obj.x - Math.cos(toward) * 220, y: obj.y - Math.sin(toward) * 220 };
+      const stop = { x: obj.x - dcos(toward) * 220, y: obj.y - dsin(toward) * 220 };
       const dest = findPosition(w, stop, 60, obj, { vehicle: true, samples: 14 });
       order(w, u, { kind: 'moveFast', target: dest });
       return;
@@ -496,7 +497,7 @@ function attackThink(w: World, u: Unit, st: SideAI, role: Role, obj: VictoryLoca
       if (d < 130 && (enemyAtObj <= 3 || superiority)) {
         if (d < 60 && ordersSmoke(w, u)) {
           const a = angleTo(pos, obj);
-          order(w, u, { kind: 'smoke', target: { x: pos.x + Math.cos(a) * 30, y: pos.y + Math.sin(a) * 30 } });
+          order(w, u, { kind: 'smoke', target: { x: pos.x + dcos(a) * 30, y: pos.y + dsin(a) * 30 } });
         }
         order(w, u, { kind: 'moveFast', target: findPosition(w, obj, 15, null, { samples: 8 }) });
         u.ai.waitT = w.time + 10;
@@ -504,7 +505,7 @@ function attackThink(w: World, u: Unit, st: SideAI, role: Role, obj: VictoryLoca
       }
       const step = Math.max(10, Math.min(d - 20, 70 + w.rng.next() * 50));
       const a = angleTo(pos, obj);
-      const next = { x: pos.x + Math.cos(a) * step, y: pos.y + Math.sin(a) * step };
+      const next = { x: pos.x + dcos(a) * step, y: pos.y + dsin(a) * step };
       const dest = findPosition(w, next, 35, obj, { samples: 18 });
       const contact = w.time - u.underFireT < 8;
       order(w, u, { kind: contact && !lateGame ? 'sneak' : 'move', target: dest });
@@ -525,7 +526,7 @@ function attackThink(w: World, u: Unit, st: SideAI, role: Role, obj: VictoryLoca
       }
       if (Math.abs(d - want) < 80 && u.order.kind === 'defend' && u.ai.task === `ow:${obj.id}`) return;
       const a = angleTo(obj, pos);
-      const near = { x: obj.x + Math.cos(a) * want, y: obj.y + Math.sin(a) * want };
+      const near = { x: obj.x + dcos(a) * want, y: obj.y + dsin(a) * want };
       const dest = findPosition(w, near, 90, obj, { vehicle: u.vehicle >= 0, samples: 22, minDistFromLook: role === 'armor' ? 40 : 120, eye: u.vehicle >= 0 ? 2.6 : 1.1 });
       u.ai.goal = dest;
       u.ai.task = `ow:${obj.id}`;
@@ -539,7 +540,7 @@ function attackThink(w: World, u: Unit, st: SideAI, role: Role, obj: VictoryLoca
       const back = role === 'fires' ? 550 : 320;
       if (d > back + 150 && role !== 'fires') {
         const a = angleTo(obj, pos);
-        const dest = findPosition(w, { x: obj.x + Math.cos(a) * back, y: obj.y + Math.sin(a) * back }, 80, null, { samples: 12 });
+        const dest = findPosition(w, { x: obj.x + dcos(a) * back, y: obj.y + dsin(a) * back }, 80, null, { samples: 12 });
         order(w, u, { kind: 'move', target: dest });
       } else if (u.order.kind === 'none') order(w, u, { kind: 'defend', target: obj });
       return;

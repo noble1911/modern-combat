@@ -1,0 +1,21 @@
+# Modern Combat on the home server: https://games.noblehaus.uk/modern-combat/ (games gateway)
+# LAN: http://192.168.1.117:3004/  ·  deploy from the laptop with `npm run deploy`
+services:
+  modern-combat:
+    build: .
+    container_name: modern-combat
+    ports:
+      - "3004:3000"
+    networks:
+      - homeserver
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3000/healthz"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+networks:
+  homeserver:
+    external: true

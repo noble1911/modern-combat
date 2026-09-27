@@ -6,6 +6,7 @@ import { CELL, T } from './terrain';
 import type { MoveMode, Order, OrderKind, Soldier, Unit, VehicleState } from './types';
 import { World } from './world';
 import { EYE } from './spotting';
+import { dcos, dhypot, dsin } from './dmath';
 
 export interface OrderCheck {
   ok: boolean;
@@ -124,9 +125,9 @@ export function hasObservation(w: World, u: Unit, p: Vec2): boolean {
     if (w.map.los(s.x, s.y, 1.7, p.x, p.y, 1.0, 1, 3).clear) return true;
   }
   // Drones overhead
-  for (const d of w.drones) if (!d.dead && d.side === u.side && d.kind === 'recon' && Math.hypot(d.x - p.x, d.y - p.y) < 200) return true;
+  for (const d of w.drones) if (!d.dead && d.side === u.side && d.kind === 'recon' && dhypot(d.x - p.x, d.y - p.y) < 200) return true;
   // Spotted enemies near the point
-  for (const info of w.spotted[u.side].values()) if (info.visible && Math.hypot(info.x - p.x, info.y - p.y) < 40) return true;
+  for (const info of w.spotted[u.side].values()) if (info.visible && dhypot(info.x - p.x, info.y - p.y) < 40) return true;
   return false;
 }
 
@@ -273,8 +274,8 @@ export function chooseSlots(w: World, u: Unit, center: Vec2, facing: number, n: 
   const bid = map.bld[ccy * map.w + ccx];
   const R = Math.min(6, 2 + Math.ceil(Math.sqrt(n)));
   const cands: { cx: number; cy: number; score: number }[] = [];
-  const fx = Math.cos(facing);
-  const fy = Math.sin(facing);
+  const fx = dcos(facing);
+  const fy = dsin(facing);
   for (let dy = -R; dy <= R; dy++) {
     for (let dx = -R; dx <= R; dx++) {
       const cx = ccx + dx;
@@ -285,7 +286,7 @@ export function chooseSlots(w: World, u: Unit, center: Vec2, facing: number, n: 
       if (map.speedFactor(cx, cy, 'foot') <= 0) continue;
       // hug hedges and walls from behind rather than standing inside them
       if (t === T.Hedge || t === T.Wall) continue;
-      const d = Math.hypot(dx, dy);
+      const d = dhypot(dx, dy);
       if (d > R + 0.5) continue;
       let score = map.cellCoverScore(cx, cy);
       if (bid >= 0) {
@@ -334,7 +335,7 @@ export function takeCover(w: World, u: Unit, center: Vec2, facing: number, mode:
     let bi = 0;
     let bd = Infinity;
     free.forEach((p, i) => {
-      const d = Math.hypot(p.x - s.x, p.y - s.y);
+      const d = dhypot(p.x - s.x, p.y - s.y);
       if (d < bd) {
         bd = d;
         bi = i;
@@ -382,7 +383,7 @@ function executeSmoke(w: World, u: Unit, target?: Vec2): void {
     // smoke screen arc in front of the vehicle / turret
     for (let i = -2; i <= 2; i++) {
       const a = v.turret + i * 0.35;
-      spawnSmoke(w, v.x + Math.cos(a) * 28, v.y + Math.sin(a) * 28, 13, 0.07, 55);
+      spawnSmoke(w, v.x + dcos(a) * 28, v.y + dsin(a) * 28, 13, 0.07, 55);
     }
     w.emit({ type: 'explosion', x: v.x, y: v.y, z: w.map.groundAt(v.x, v.y) + 2.5, size: 1, kind: 'smoke' });
     w.msg(u.side, `${u.name}: Popping smoke!`, u.id, 'info');
@@ -405,7 +406,7 @@ function executeSmoke(w: World, u: Unit, target?: Vec2): void {
   // thrown smoke grenade
   const dx = target.x - leader.x;
   const dy = target.y - leader.y;
-  const d = Math.hypot(dx, dy);
+  const d = dhypot(dx, dy);
   const T_ = Math.max(0.6, d / 14);
   w.projectiles.push({
     id: w.newProjectileId(), weapon: WEAPONS.smokegren, side: u.side, shooterSoldier: leader.id, shooterVehicle: -1,
@@ -430,8 +431,8 @@ export function dismount(w: World, u: Unit): void {
   const alive = u.soldiers.map((id) => w.soldiers[id]).filter((s) => s.health !== 'dead');
   alive.forEach((s, i) => {
     const off = (i - (alive.length - 1) / 2) * 1.2;
-    const bx = v.x + Math.cos(back) * (v.def.length / 2 + 1.5) + Math.cos(back + Math.PI / 2) * off;
-    const by = v.y + Math.sin(back) * (v.def.length / 2 + 1.5) + Math.sin(back + Math.PI / 2) * off;
+    const bx = v.x + dcos(back) * (v.def.length / 2 + 1.5) + dcos(back + Math.PI / 2) * off;
+    const by = v.y + dsin(back) * (v.def.length / 2 + 1.5) + dsin(back + Math.PI / 2) * off;
     const p = nearestPassable(w.map, bx, by, 'foot', 4) ?? { x: v.x, y: v.y };
     s.vehicle = -1;
     s.x = s.px = p.x;
@@ -439,7 +440,7 @@ export function dismount(w: World, u: Unit): void {
     s.stance = 'crouch';
     s.facing = v.heading;
   });
-  const center = { x: v.x + Math.cos(back) * (v.def.length / 2 + 6), y: v.y + Math.sin(back) * (v.def.length / 2 + 6) };
+  const center = { x: v.x + dcos(back) * (v.def.length / 2 + 6), y: v.y + dsin(back) * (v.def.length / 2 + 6) };
   u.order = { kind: 'defend', issuedAt: w.time, facing: v.heading };
   u.facing = v.heading;
   u.holdPos = center;
@@ -460,7 +461,7 @@ export function updateOrders(w: World): void {
         continue;
       }
       const alive = w.aliveSoldiers(u);
-      const near = alive.every((s) => Math.hypot(s.x - cv.x, s.y - cv.y) < 9);
+      const near = alive.every((s) => dhypot(s.x - cv.x, s.y - cv.y) < 9);
       if (near && Math.abs(cv.speed) < 1.5) {
         w.embark(u, c);
         w.msg(u.side, `${u.name}: Mounted up.`, u.id, 'info');

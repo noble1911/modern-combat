@@ -1,4 +1,5 @@
 import { clamp, Vec2 } from './math';
+import { datan2, dcos, dhypot, dsin } from './dmath';
 
 /** Metres per terrain cell. */
 export const CELL = 4;
@@ -250,7 +251,7 @@ export class TerrainMap {
   ): LosResult {
     const dx = bx - ax;
     const dy = by - ay;
-    const d = Math.hypot(dx, dy);
+    const d = dhypot(dx, dy);
     const za = this.groundAt(ax, ay) + aEye;
     const zb = this.groundAt(bx, by) + bEye;
     if (d < 1) return { clear: true, obstruction: 0, blockedAt: d };
@@ -368,9 +369,9 @@ export class TerrainMap {
     let coverHE = own.coverHE;
     let conceal = own.conceal;
     // Adjacent linear cover (wall/hedge/building edge) between us and the threat counts too.
-    const ang = Math.atan2(fromY - y, fromX - x);
-    const nx = Math.floor((x + Math.cos(ang) * CELL * 0.9) / CELL);
-    const ny = Math.floor((y + Math.sin(ang) * CELL * 0.9) / CELL);
+    const ang = datan2(fromY - y, fromX - x);
+    const nx = Math.floor((x + dcos(ang) * CELL * 0.9) / CELL);
+    const ny = Math.floor((y + dsin(ang) * CELL * 0.9) / CELL);
     if (this.inBounds(nx, ny) && (nx !== cx || ny !== cy)) {
       const t = this.type[ny * this.w + nx] as T;
       const p = TERRAIN[t];
@@ -382,7 +383,7 @@ export class TerrainMap {
     }
     // Reverse slope / small rise between us and the shooter.
     const g = this.groundAt(x, y);
-    const g2 = this.groundAt(x + Math.cos(ang) * 6, y + Math.sin(ang) * 6);
+    const g2 = this.groundAt(x + dcos(ang) * 6, y + dsin(ang) * 6);
     if (g2 - g > 0.6) {
       cover = Math.max(cover, 0.35);
       coverHE = Math.max(coverHE, 0.3);

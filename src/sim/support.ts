@@ -5,6 +5,7 @@ import { explode, hitVehicle } from './combat';
 import { spawnSmoke } from './orders';
 import type { Drone } from './types';
 import { DT, World } from './world';
+import { datan2, dcos, dhypot, dsin } from './dmath';
 
 export function updateSupport(w: World): void {
   updateFireMissions(w);
@@ -115,17 +116,17 @@ function reconDrone(w: World, d: Drone): void {
   const alt = 110;
   const dx = d.tx - d.x;
   const dy = d.ty - d.y;
-  const dist = Math.hypot(dx, dy);
+  const dist = dhypot(dx, dy);
   if (dist > 90) {
-    const a = Math.atan2(dy, dx);
+    const a = datan2(dy, dx);
     d.heading = turnToward(d.heading, a, 1.2 * DT);
-    d.x += Math.cos(d.heading) * d.speed * DT;
-    d.y += Math.sin(d.heading) * d.speed * DT;
+    d.x += dcos(d.heading) * d.speed * DT;
+    d.y += dsin(d.heading) * d.speed * DT;
   } else {
     // orbit
     d.phase += (d.speed / 80) * DT;
-    const ox = d.tx + Math.cos(d.phase) * 80;
-    const oy = d.ty + Math.sin(d.phase) * 80;
+    const ox = d.tx + dcos(d.phase) * 80;
+    const oy = d.ty + dsin(d.phase) * 80;
     d.heading = angleTo(d, { x: ox, y: oy });
     d.x += (ox - d.x) * 0.2;
     d.y += (oy - d.y) * 0.2;
@@ -139,7 +140,7 @@ function strikeDrone(w: World, d: Drone): void {
   if (tu && !tu.eliminated) {
     const p = w.unitPos(tu);
     // loitering munitions keep updating while the target is observed
-    if (w.isVisibleTo(d.side, tu.id) || Math.hypot(p.x - d.tx, p.y - d.ty) < 60) {
+    if (w.isVisibleTo(d.side, tu.id) || dhypot(p.x - d.tx, p.y - d.ty) < 60) {
       d.tx = p.x;
       d.ty = p.y;
     }
@@ -147,14 +148,14 @@ function strikeDrone(w: World, d: Drone): void {
   const gz = w.map.groundAt(d.tx, d.ty);
   const dx = d.tx - d.x;
   const dy = d.ty - d.y;
-  const dist = Math.hypot(dx, dy);
-  const a = Math.atan2(dy, dx);
+  const dist = dhypot(dx, dy);
+  const a = datan2(dy, dx);
   d.heading = turnToward(d.heading, a, 2.5 * DT);
   const step = d.speed * DT;
   const cruise = w.map.groundAt(d.x, d.y) + Math.min(60, 10 + dist * 0.15);
   if (dist > step * 2) {
-    d.x += Math.cos(d.heading) * step;
-    d.y += Math.sin(d.heading) * step;
+    d.x += dcos(d.heading) * step;
+    d.y += dsin(d.heading) * step;
     d.z += (cruise - d.z) * 0.1;
     if (dist < 80) d.z += (gz + 1 - d.z) * 0.2; // terminal dive
     return;
@@ -164,7 +165,7 @@ function strikeDrone(w: World, d: Drone): void {
   const vehicle = tu && tu.vehicle >= 0 ? w.vehicles[tu.vehicle] : null;
   const operatorSoldier = w.leaderOf(w.units[d.unitId])?.id ?? -1;
   const pHit = 0.78;
-  if (vehicle && !vehicle.destroyed && Math.hypot(vehicle.x - d.x, vehicle.y - d.y) < 8 && w.rng.next() < pHit) {
+  if (vehicle && !vehicle.destroyed && dhypot(vehicle.x - d.x, vehicle.y - d.y) < 8 && w.rng.next() < pHit) {
     const pen = d.side === 'nato' ? 800 : 450; // Switchblade 600 (Javelin warhead) vs FPV with PG-7 warhead
     hitVehicle(w, vehicle, { pen, heat: true, tandem: d.side === 'nato', topAttack: true, cls: 'atgm', name: d.side === 'nato' ? 'Switchblade 600' : 'FPV drone' }, d.x, d.y, operatorSoldier, -1);
     w.emit({ type: 'explosion', x: vehicle.x, y: vehicle.y, z: gz + 2, size: 3, kind: 'drone' });
@@ -178,7 +179,7 @@ function shootAtDrone(w: World, d: Drone): void {
   const hr = d.kind === 'recon' ? 260 : 180;
   for (const v of w.vehicles) {
     if (v.side === d.side || v.destroyed || v.abandoned) continue;
-    const dd = Math.hypot(v.x - d.x, v.y - d.y);
+    const dd = dhypot(v.x - d.x, v.y - d.y);
     if (dd > hr) continue;
     if (v.weapons.some((ws) => ws.mount === 'rws' || ws.def.cls === 'autocannon')) p += d.kind === 'recon' ? 0.003 : 0.02;
   }

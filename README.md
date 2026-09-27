@@ -16,6 +16,7 @@ All units, places and events are fictional.
 ```bash
 npm install
 npm run dev          # http://127.0.0.1:5173
+npm run server       # multiplayer relay on :3004 (the dev server forwards /ws to it)
 npm run build        # production build in dist/
 npm test             # simulation unit/integration tests
 ```
@@ -29,6 +30,13 @@ Useful URL flags:
   battle.
 
 ## Game modes
+
+- **Multiplayer.** Two players online, from the Multiplayer menu:
+  - **Head to head:** one player commands NATO, the other OPFOR.
+  - **Co-op vs AI:** both command units on one side against the AI.
+  - **Setup:** host a game and send the invite link or 4-letter code; each player requisitions their own force in the lobby.
+  - **Pausing:** anyone can pause; the battle resumes when everyone has resumed.
+  - **Dropouts:** reloading or a dropped connection rejoins the battle in progress; a player who leaves is replaced by their partner or the AI.
 
 - **Operation Iron Corridor (campaign).** Six sectors along Route Iron, played over seven days
   with two turns per day. Air assault battalions hold ground at Veldmark, Hollen and far-off
@@ -86,7 +94,9 @@ src/sim/      deterministic simulation — no DOM/Three.js; runs headless in tes
 src/data/     weapons, vehicles, unit templates, factions, the six campaign maps
 src/render/   Three.js view: terrain texture painter, instanced soldiers & trees, vehicle models,
               GPU particles/tracers, NATO symbols, overlays, RTS camera
-src/game/     battle HUD/controller, campaign rules + UI, menus, quick battle
+src/game/     battle HUD/controller, campaign rules + UI, menus, quick battle, multiplayer lobby
+src/net/      multiplayer: wire protocol, lockstep engine, shared session state, socket client
+server/       Node server: serves the built game and relays multiplayer battles (rooms, steps, replay)
 src/audio/    procedural WebAudio battlefield sound
 tools/blender/  headless Blender scripts that build every 3D model (npm run models)
 public/models/  exported .glb models + manifest
@@ -133,6 +143,21 @@ They appear in:
 - the Quick Battle force selection, with a composition line for each unit and a full breakdown
   of any unit you click (soldiers and weapons, or armour, speed, protection, weapons and crew);
 - the campaign battlegroup roster.
+
+### Multiplayer
+
+Multiplayer uses **deterministic lockstep**. Every player's browser runs the same battle, and
+only commands cross the network.
+- **Steps:** a command is stamped with the 0.1 s simulation step it takes effect on (0.3 s
+  ahead, to hide latency), and no one runs a step until they have every player's commands for it.
+- **Determinism:** the simulation uses only seeded randomness, and its trigonometry and
+  exponentials (`src/sim/dmath.ts`) are built from exactly rounded IEEE operations. So Chrome,
+  Firefox and Safari compute bit-identical battles.
+- **Checksums:** exchanged every two seconds to detect any desync.
+- **Relay:** `server/index.mjs` forwards steps, keeps rooms and logs commands. A player who
+  reloads replays the battle from the log in a second or two and carries on.
+- **Tests:** `tests/lockstep.test.ts` and `tests/relay.test.ts` cover sync over a laggy network,
+  replay, drops and the relay protocol.
 
 ### Simulation tooling
 

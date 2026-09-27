@@ -3,6 +3,7 @@ import { clamp } from './math';
 import { TERRAIN, T } from './terrain';
 import type { Soldier, Unit } from './types';
 import { World } from './world';
+import { dexp, dhypot } from './dmath';
 
 export const EYE: Record<Soldier['stance'], number> = { stand: 1.7, crouch: 1.1, prone: 0.45 };
 export const TGT_H: Record<Soldier['stance'], number> = { stand: 1.3, crouch: 0.85, prone: 0.3 };
@@ -82,8 +83,8 @@ function targets(w: World, u: Unit): Tgt[] {
 /** Chance to spot per check (every 0.5 s) given a clear LOS. */
 function spotChance(o: Obs, t: Tgt, d: number, obstruction: number): number {
   let p: number;
-  if (t.vehicle) p = 0.6 * Math.exp(-d / 1200);
-  else p = 0.35 * Math.exp(-d / 220);
+  if (t.vehicle) p = 0.6 * dexp(-d / 1200);
+  else p = 0.35 * dexp(-d / 220);
   p *= t.exposure;
   p *= 1 - t.conceal * (t.activity > 2 ? 0.3 : 0.9);
   p *= 1 - obstruction * 0.75;
@@ -106,7 +107,7 @@ export function updateSpotting(w: World): void {
     for (const tgtUnit of w.units) {
       if (tgtUnit.side === side || tgtUnit.eliminated || tgtUnit.withdrawn) continue;
       const tp = w.unitPos(tgtUnit);
-      const d0 = Math.hypot(tp.x - op.x, tp.y - op.y);
+      const d0 = dhypot(tp.x - op.x, tp.y - op.y);
       if (d0 > MAX_RANGE) continue;
       const tgts = targets(w, tgtUnit);
       if (!tgts.length) continue;
@@ -117,7 +118,7 @@ export function updateSpotting(w: World): void {
       outer: for (const o of obs) {
         for (const t of tgts) {
           if (++tries > 4) break outer;
-          const d = Math.hypot(t.x - o.x, t.y - o.y);
+          const d = dhypot(t.x - o.x, t.y - o.y);
           if (!t.vehicle && d > 1100 && t.activity < 2) continue;
           const los = w.map.los(o.x, o.y, o.eye, t.x, t.y, t.h, o.thermal ? 0.35 : 1);
           if (!los.clear) continue;
@@ -147,7 +148,7 @@ export function updateSpotting(w: World): void {
       for (const u of w.units) {
         if (u.side === side || u.eliminated || u.withdrawn || u.mountedIn >= 0) continue;
         const p = w.unitPos(u);
-        const dd = Math.hypot(p.x - d.x, p.y - d.y);
+        const dd = dhypot(p.x - d.x, p.y - d.y);
         if (dd > 190) continue;
         const t = w.map.typeAt(p.x, p.y);
         let chance = u.vehicle >= 0 ? 0.9 : 0.55;

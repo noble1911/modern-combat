@@ -57,5 +57,15 @@ Your soldiers are people, not robots: under fire they get <b>suppressed</b>, <b>
 </ul>
 
 <h2>The Operation</h2>
-<p>Operation Iron Corridor is a campaign in six sectors along Route Iron. As in Market Garden, air assault infantry must seize the bridges while an armoured task force pushes up the road to relieve them — and a lone airborne battalion holds the far bridge at Arnholt. Your battlegroups carry their losses and experience from battle to battle. Win each sector to advance the corridor before the days run out.</p>`;
+<p>Operation Iron Corridor is a campaign in six sectors along Route Iron. As in Market Garden, air assault infantry must seize the bridges while an armoured task force pushes up the road to relieve them — and a lone airborne battalion holds the far bridge at Arnholt. Your battlegroups carry their losses and experience from battle to battle. Win each sector to advance the corridor before the days run out.</p>
+
+<h2>Multiplayer</h2>
+<ul>
+<li><b>Two ways to play.</b> Choose <b>Multiplayer</b> on the main menu. <b>Head to head</b>: one of you commands NATO, the other OPFOR. <b>Co-op vs AI</b>: you share a side against the computer, each commanding your own units.</li>
+<li><b>Hosting and joining.</b> The host picks the battlefield, sides, points and time limit, then sends the invite link (or the 4-letter code). Each player requisitions their own force in the lobby; the host starts the battle once everyone is ready.</li>
+<li><b>Deployment.</b> Each player deploys, then presses <b>Ready</b>. The battle starts when everyone is ready.</li>
+<li><b>Pausing.</b> The battle runs at normal speed. Anyone can pause with <b>Space</b>, and orders can still be given while paused. It resumes when every player has pressed Space again.</li>
+<li><b>Cease-fire and withdrawal.</b> A cease-fire needs both commanders to request one (in co-op, the AI decides). Withdrawing concedes.</li>
+<li><b>Connection problems.</b> If your connection drops or you reload the page, you rejoin the battle where it is. If someone leaves for good, a co-op partner takes over their units, or the AI takes their side in a head-to-head.</li>
+</ul>`;
 }
